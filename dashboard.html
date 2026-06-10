@@ -112,6 +112,13 @@ footer { margin-top: 40px; padding: 20px 14px; border-top: 1px solid #2A2A2A; ma
   #cards, footer { padding-left: 20px; padding-right: 20px; }
   .card-hd, .bias-row, .sec-body, .subsection-header { padding-left: 20px; padding-right: 20px; }
 }
+
+/* Rule 1 trigger box */
+.rule1-box { margin-top: 12px; padding: 10px 12px; background: rgba(34,197,94,0.06); border: 1px solid rgba(34,197,94,0.25); border-radius: 8px; }
+.rule1-title { font-size: 10px; font-weight: 500; color: #22C55E; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+.rule1-row { display: flex; align-items: baseline; gap: 6px; margin-bottom: 3px; font-size: 12px; color: #C7C7C7; }
+.rule1-big { font-size: 15px; font-weight: 500; color: #22C55E; font-variant-numeric: tabular-nums; }
+.rule1-dim { font-size: 11px; color: #555555; }
 </style>
 </head>
 <body>
@@ -236,6 +243,7 @@ async function loadSession(sess,start_date,end_date) {
     jobs.ibWkd  = safe(p('intraday_calculation','initial-balance-breakout-by-weekday'),ib);
     jobs.ibRet  = safe(p('intraday_calculation','initial-balance-breakout-by-retracement'),ib);
     jobs.ibCont = safe(p('intraday_calculation','opening-candle-continuation-standard'),ib);
+    jobs.ibRej  = safe(p('intraday_calculation','initial-balance-breakout-by-rejection'),ib);
   }
   const keys=Object.keys(jobs), vals=await Promise.all(Object.values(jobs));
   S.data[sess.id]=Object.fromEntries(keys.map((k,i)=>[k,vals[i]]));
@@ -272,6 +280,19 @@ function pIBCont(d) {
   if (!d||d._err) return null;
   const arr=Array.isArray(d.summary)?d.summary:[], f=cat=>arr.find(x=>x.category===cat)?.percentage??null;
   return { gGreen:f('green day after green open'), rRed:f('red day after red open') };
+}
+function pIBRej(d) {
+  if (!d||d._err) return null;
+  const arr=Array.isArray(d.summary)?d.summary:[], f=cat=>arr.find(x=>x.category===cat);
+  const hF=f('IB high formed first'), lF=f('IB low formed first');
+  const hBH=f('IB high first break IB high'), hBL=f('IB high first break IB low');
+  const lBH=f('IB low first break IB high'), lBL=f('IB low first break IB low');
+  return {
+    hFirstPct: hF?+hF.percentage:null, hFirstN: hF?.frequency||0,
+    lFirstPct: lF?+lF.percentage:null, lFirstN: lF?.frequency||0,
+    hBreakHPct: hBH?+hBH.percentage:null, hBreakLPct: hBL?+hBL.percentage:null,
+    lBreakHPct: lBH?+lBH.percentage:null, lBreakLPct: lBL?+lBL.percentage:null,
+  };
 }
 function pGapFill(d) {
   if (!d||d._err) return null;
@@ -407,7 +428,7 @@ ${renderCtxSection(sess,d,edgefulBase)}
 
 // ── IB Breakout section ───────────────────────────────────
 function renderIBSection(sess,d,post,edgefulBase) {
-  const std=pIBStd(d.ibStd), wkd=pIBWkd(d.ibWkd), ret=pIBRet(d.ibRet), cont=pIBCont(d.ibCont);
+  const std=pIBStd(d.ibStd), wkd=pIBWkd(d.ibWkd), ret=pIBRet(d.ibRet), cont=pIBCont(d.ibCont), rej=pIBRej(d.ibRej);
   const dow=dowName(), DAY={Mon:'Monday',Tue:'Tuesday',Wed:'Wednesday',Thu:'Thursday',Fri:'Friday'}[dow];
   let h='';
 
@@ -465,6 +486,36 @@ function renderIBSection(sess,d,post,edgefulBase) {
     h+=sRow('25% retrace',ret.dnL1,'',sess.ep===25);
     h+=sRow('50% retrace',ret.dnL2,'',sess.ep===50);
     h+=sRow('75% retrace',ret.dnL3);
+  } else { h+=`<div class="load-msg">loading…</div>`; }
+
+  h+=`</div>`;
+
+  // Direction Trigger (by-rejection)
+  h+=`<div class="subsection-header">
+  <div style="display:flex;align-items:baseline;justify-content:space-between">
+    <h3 class="text-sm font-medium lowercase" style="color:#FFFFFF">direction trigger</h3>
+    <span class="source-label">from: <a href="${edgefulBase}/initial-balance-breakout/by-rejection" target="_blank" rel="noopener">initial balance by rejection</a></span>
+  </div>
+</div>
+<div class="sec-body">`;
+
+  if (d.ibRej&&d.ibRej._err) { h+=`<div class="err-msg">${d.ibRej._err}</div>`; }
+  else if (rej) {
+    h+=`<div style="font-size:11px;color:#555555;margin-bottom:6px">which side forms first</div>`;
+    h+=sRow('ib high formed first',rej.hFirstPct,`n=${rej.hFirstN}`);
+    h+=sRow('ib low formed first',rej.lFirstPct,`n=${rej.lFirstN}`);
+    h+=`<div class="mini-div"></div>`;
+    h+=`<div style="font-size:11px;color:#555555;margin-bottom:5px">when IB HIGH forms first (n=${rej.hFirstN})</div>`;
+    h+=`<div class="indent">${sRow('→ ib high breaks',rej.hBreakHPct)}</div>`;
+    h+=`<div class="indent">${sRow('→ ib low breaks',rej.hBreakLPct)}</div>`;
+    h+=`<div style="font-size:11px;color:#555555;margin-top:8px;margin-bottom:5px">when IB LOW forms first (n=${rej.lFirstN})</div>`;
+    h+=`<div class="indent">${sRow('→ ib high breaks',rej.lBreakHPct,null,true)}</div>`;
+    h+=`<div class="indent">${sRow('→ ib low breaks',rej.lBreakLPct)}</div>`;
+    h+=`<div class="rule1-box">
+      <div class="rule1-title">rule 1 — 10:30 direction trigger</div>
+      <div class="rule1-row">ib low forms first → <span class="rule1-big">${rej.lBreakHPct!=null?Math.round(rej.lBreakHPct)+'%':'—'}</span> break ib high <span class="rule1-dim">n=${rej.lFirstN}</span></div>
+      <div class="rule1-row" style="margin-top:4px">+ ib closes top 25% of range → <span class="rule1-big">97.4%</span> <span class="rule1-dim">n=38 · your data</span></div>
+    </div>`;
   } else { h+=`<div class="load-msg">loading…</div>`; }
 
   h+=`</div>`;
