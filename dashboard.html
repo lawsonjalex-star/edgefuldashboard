@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>IB v4 Dashboard</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0d1117; --surface: #161b22; --surface2: #21262d; --border: #30363d;
+  --text: #e6edf3; --muted: #8b949e;
+  --blue: #58a6ff; --green: #3fb950; --red: #f85149; --yellow: #e3b341;
+}
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; }
+
+/* Setup */
+#setup { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; gap: 14px; text-align: center; }
+#setup h1 { font-size: 22px; color: var(--blue); }
+#setup p { color: var(--muted); max-width: 300px; font-size: 13px; }
+#key-input { width: 100%; max-width: 340px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; outline: none; }
+#key-input:focus { border-color: var(--blue); }
+#key-input::placeholder { color: var(--muted); }
+.btn { padding: 11px 22px; background: var(--blue); color: #0d1117; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; min-height: 44px; }
+.btn:disabled { opacity: 0.5; cursor: default; }
+#setup-err { color: var(--red); font-size: 12px; min-height: 16px; }
+
+/* Header */
+#header { position: sticky; top: 0; z-index: 100; background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 14px; display: flex; align-items: center; gap: 10px; }
+#header h1 { font-size: 15px; font-weight: 700; color: var(--blue); flex: 1; }
+.lb-group { display: flex; background: var(--surface2); border-radius: 6px; overflow: hidden; }
+.lb-btn { padding: 5px 9px; background: none; border: none; color: var(--muted); cursor: pointer; font-size: 12px; font-weight: 500; min-height: 30px; }
+.lb-btn.active { background: var(--blue); color: #0d1117; font-weight: 700; }
+#refresh-btn { padding: 5px 9px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--muted); cursor: pointer; font-size: 16px; min-height: 30px; line-height: 1; }
+
+/* Mode bar */
+#mode-bar { background: var(--surface2); border-bottom: 1px solid var(--border); padding: 7px 14px; display: flex; align-items: center; gap: 10px; font-size: 12px; }
+.mode-badge { padding: 2px 9px; border-radius: 20px; font-weight: 700; font-size: 11px; letter-spacing: 0.04em; }
+.pre-badge  { background: rgba(88,166,255,0.15); color: var(--blue); }
+.post-badge { background: rgba(63,185,80,0.15);  color: var(--green); }
+#mode-et { color: var(--muted); }
+#mode-toggle { margin-left: auto; padding: 3px 8px; background: none; border: 1px solid var(--border); border-radius: 4px; color: var(--muted); cursor: pointer; font-size: 11px; }
+
+/* Cards */
+#cards { padding: 14px; display: flex; flex-direction: column; gap: 14px; max-width: 560px; margin: 0 auto; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.card.has-conflict { border-color: var(--red); }
+
+/* Card header */
+.card-hd { padding: 12px 14px 10px; }
+.card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.card-name { font-size: 16px; font-weight: 700; }
+.card-link { font-size: 11px; color: var(--muted); text-decoration: none; padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border); }
+.card-link:hover { color: var(--blue); border-color: var(--blue); }
+.card-price { margin-left: auto; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; min-width: 60px; text-align: right; }
+.card-sub { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.badge-oos { font-size: 10px; color: var(--yellow); background: rgba(227,179,65,0.15); padding: 1px 7px; border-radius: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
+
+/* Bias */
+.bias-row { display: flex; gap: 7px; padding: 9px 14px; border-top: 1px solid var(--border); }
+.bias-btn { flex: 1; padding: 9px 6px; background: none; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); cursor: pointer; font-size: 13px; font-weight: 600; min-height: 44px; }
+.bias-btn.sel-long    { background: rgba(63,185,80,0.18);  color: var(--green); border-color: var(--green); }
+.bias-btn.sel-neutral { background: rgba(139,148,158,0.18); color: var(--text); border-color: var(--muted); }
+.bias-btn.sel-short   { background: rgba(248,81,73,0.18);  color: var(--red);   border-color: var(--red); }
+
+/* Conflict */
+.conflict-box { margin: 0 14px 10px; padding: 8px 12px; background: rgba(248,81,73,0.1); border: 1px solid var(--red); border-radius: 8px; font-size: 12px; color: var(--red); }
+.conflict-box strong { display: block; margin-bottom: 3px; }
+
+/* Sections */
+.section { border-top: 1px solid var(--border); padding: 11px 14px; }
+.sec-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); margin-bottom: 10px; }
+
+/* Stat rows */
+.sr { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; font-size: 13px; }
+.sr-lbl { flex: 1.2; color: var(--muted); min-width: 0; }
+.sr-bar { flex: 1.5; height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+.sr-fil { height: 100%; border-radius: 3px; background: var(--blue); }
+.sr-fil.g { background: var(--green); }
+.sr-fil.r { background: var(--red); }
+.sr-fil.y { background: var(--yellow); }
+.sr-pct { width: 34px; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+.sr-n   { width: 32px; text-align: right; font-size: 11px; color: var(--muted); }
+.star   { color: var(--yellow); }
+
+.dow-block { background: rgba(88,166,255,0.07); border: 1px solid rgba(88,166,255,0.2); border-radius: 7px; padding: 8px 10px; margin: 8px 0; }
+.dow-block .sr-lbl { color: var(--blue); font-weight: 600; }
+
+.mini-div { height: 1px; background: var(--border); margin: 9px 0; }
+.sub-note { font-size: 11px; color: var(--muted); margin-bottom: 7px; }
+.indent   { padding-left: 14px; }
+.load-msg { font-size: 12px; color: var(--muted); padding: 4px 0; }
+.err-msg  { font-size: 12px; color: var(--red);   padding: 4px 0; }
+
+/* IB color picker */
+.ib-picker { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.ib-lbl { font-size: 12px; color: var(--muted); }
+.ib-cb { padding: 5px 12px; background: none; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 12px; color: var(--muted); min-height: 34px; }
+.ib-cb.sel-g { background: rgba(63,185,80,0.18);  color: var(--green); border-color: var(--green); }
+.ib-cb.sel-r { background: rgba(248,81,73,0.18); color: var(--red);   border-color: var(--red); }
+
+@media (min-width: 600px) {
+  #cards { padding: 20px; }
+  .card-hd, .bias-row, .section { padding-left: 18px; padding-right: 18px; }
+}
+</style>
+</head>
+<body>
+
+<div id="setup">
+  <h1>IB v4 Dashboard</h1>
+  <p>Enter your Edgeful API key. It is held in memory only and cleared when you close the tab.</p>
+  <input id="key-input" type="password" placeholder="ef_live_..." autocomplete="off" spellcheck="false">
+  <button class="btn" id="connect-btn">Connect</button>
+  <div id="setup-err"></div>
+  <p style="font-size:11px;color:var(--muted);max-width:280px">Must be served over HTTP — use VS Code Live Server or Replit, not opened as a local file.</p>
+</div>
+
+<div id="dashboard" hidden>
+  <div id="header">
+    <h1>IB v4</h1>
+    <div class="lb-group">
+      <button class="lb-btn" data-lb="3M">3M</button>
+      <button class="lb-btn" data-lb="6M">6M</button>
+      <button class="lb-btn active" data-lb="1Y">1Y</button>
+    </div>
+    <button id="refresh-btn" title="Refresh">⟳</button>
+  </div>
+  <div id="mode-bar">
+    <span id="mode-badge" class="mode-badge pre-badge">PRE-IB</span>
+    <span id="mode-et"></span>
+    <button id="mode-toggle">Override</button>
+  </div>
+  <div id="cards"></div>
+</div>
+
+<script>
+'use strict';
+const BASE = 'https://api.edgeful.com';
+
+const SESSIONS = [
+  { id:'nq-ny',     name:'NQ NY',     ticker:'NQ',  mt:'futures', ib:true,  ep:25, days:['Mon','Wed','Thu','Fri'],       size:'2 MNQ', win:'09:30–10:30 ET', s:'09:30:00', e:'16:00:00' },
+  { id:'es-ny',     name:'ES NY',     ticker:'ES',  mt:'futures', ib:true,  ep:25, days:['Mon','Tue','Wed','Thu','Fri'], size:'TBD',   win:'09:30–10:30 ET', s:'09:30:00', e:'16:00:00' },
+  { id:'nq-london', name:'NQ London', ticker:'NQ',  mt:'futures', ib:false, ep:50, days:['Thu','Fri'],                   size:'8 MNQ', win:'03:00–04:00 ET', s:'03:00:00', e:'10:00:00' },
+  { id:'cl-ny',     name:'CL NY',     ticker:'CL',  mt:'futures', ib:true,  ep:50, days:['Mon','Tue','Wed'],             size:'2 MCL', win:'09:30–10:30 ET', s:'09:30:00', e:'16:00:00' },
+  { id:'rty',       name:'RTY',       ticker:'RTY', mt:'futures', ib:true,  ep:25, days:['Mon','Thu','Fri'],             size:'7 M2K', win:'09:30–10:30 ET', s:'09:30:00', e:'16:00:00', note:'IB ≥ 25pts' },
+];
+
+const IB_EXTRA = { ib_period:'60min', timeframe:'5min' };
+
+const S = {
+  key:      sessionStorage.getItem('ef_key') || '',
+  lookback: '1Y',
+  override: null,
+  bias:     {},
+  ibColor:  {},
+  data:     {},
+  prices:   {},
+};
+
+// ── Time ────────────────────────────────────────────────────────────
+function nowET()   { return new Date(new Date().toLocaleString('en-US', { timeZone:'America/New_York' })); }
+function dowName() { return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][nowET().getDay()]; }
+function isPost()  {
+  if (S.override) return S.override === 'post';
+  const t = nowET();
+  return t.getHours() > 10 || (t.getHours() === 10 && t.getMinutes() >= 30);
+}
+function dateRange(lb) {
+  const end = new Date(), start = new Date();
+  if (lb === '1Y') start.setFullYear(start.getFullYear() - 1);
+  else if (lb === '6M') start.setMonth(start.getMonth() - 6);
+  else start.setMonth(start.getMonth() - 3);
+  const f = d => d.toISOString().slice(0, 10);
+  return { start_date: f(start), end_date: f(end) };
+}
+
+// ── API ─────────────────────────────────────────────────────────────
+async function apiFetch(path, params) {
+  const url = new URL(BASE + path);
+  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+  const res = await fetch(url.toString(), { headers: { Authorization: `Bearer ${S.key}` } });
+  if (res.status === 401) throw Object.assign(new Error('Invalid API key (401)'), { status: 401 });
+  if (res.status === 403) {
+    const b = await res.json().catch(() => ({}));
+    throw Object.assign(new Error(b.code || 'Access denied (403)'), { status: 403 });
+  }
+  if (!res.ok) throw Object.assign(new Error(`HTTP ${res.status}`), { status: res.status });
+  return res.json();
+}
+
+async function safe(path, params) {
+  try { return await apiFetch(path, params); }
+  catch (e) { return { _err: e.message, _status: e.status }; }
+}
+
+// ── Load ─────────────────────────────────────────────────────────────
+async function loadAll() {
+  renderModeBar();
+  renderCards();  // show loading state immediately
+  const { start_date, end_date } = dateRange(S.lookback);
+  await Promise.all(SESSIONS.map(sess => loadSession(sess, start_date, end_date)));
+  loadPrices().catch(() => {});
+  renderCards();
+}
+
+async function loadSession(sess, start_date, end_date) {
+  const dr  = { start_date, end_date };
+  const ctx = { ...dr, start_time: sess.s, end_time: sess.e, timezone: 'America/New_York' };
+  const ib  = { ...dr, ...IB_EXTRA, start_time: '09:30:00', end_time: '16:00:00', timezone: 'America/New_York' };
+  const p   = (prefix, slug) => `/${prefix}/${slug}/${sess.mt}/${sess.ticker}`;
+
+  const jobs = {
+    openingStats: safe(p('report_calculation', 'opening-stats-standard'),       ctx),
+    prevDayRange: safe(p('report_calculation', 'previous-days-range-standard'), ctx),
+    gapFill:      safe(p('report_calculation', 'gap-fill-standard'),            ctx),
+  };
+  if (sess.ib) {
+    jobs.ibStd  = safe(p('intraday_calculation', 'initial-balance-breakout-standard'),       ib);
+    jobs.ibWkd  = safe(p('intraday_calculation', 'initial-balance-breakout-by-weekday'),     ib);
+    jobs.ibRet  = safe(p('intraday_calculation', 'initial-balance-breakout-by-retracement'), ib);
+    jobs.ibCont = safe(p('intraday_calculation', 'opening-candle-continuation-standard'),    ib);
+  }
+
+  const keys = Object.keys(jobs);
+  const vals = await Promise.all(Object.values(jobs));
+  S.data[sess.id] = Object.fromEntries(keys.map((k, i) => [k, vals[i]]));
+}
+
+async function loadPrices() {
+  const tickers = [...new Set(SESSIONS.map(s => s.ticker))].join(',');
+  const res = await apiFetch('/historic_data_screener', { market_type: 'futures', tickers, session_name: 'NY' });
+  const items = Array.isArray(res) ? res : (res.data || res.results || []);
+  items.forEach(item => {
+    const t = item.ticker || item.symbol;
+    const p = item.price || item.last || item.close;
+    if (t && p != null) S.prices[t] = p;
+  });
+  document.querySelectorAll('[data-price]').forEach(el => {
+    const p = S.prices[el.dataset.price];
+    if (p != null) el.textContent = p.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  });
+}
+
+setInterval(() => { if (S.key) loadPrices().catch(() => {}); }, 30000);
+
+// ── Parsers ──────────────────────────────────────────────────────────
+function pIBStd(d) {
+  if (!d || d._err) return null;
+  const total = d.totalDays || 1, s = d.summary || {};
+  const sn = s.singleBreak || 0, bn = s.bothBroken || 0, nn = s.neitherBroken || 0;
+  return { total, sPct: +(sn/total*100).toFixed(1), bPct: +(bn/total*100).toFixed(1), nPct: +(nn/total*100).toFixed(1), sN:sn, bN:bn, nN:nn };
+}
+
+function pIBWkd(d) {
+  if (!d || d._err) return null;
+  const out = {};
+  ['Monday','Tuesday','Wednesday','Thursday','Friday'].forEach(day => {
+    const w = (d.summary || {})[day];
+    if (!w) return;
+    out[day] = { n: w.totalDays||0, sPct: w.singleBreak?.percentage??0, bPct: w.bothBroken?.percentage??0, nPct: w.neitherBroken?.percentage??0 };
+  });
+  return out;
+}
+
+function pIBRet(d) {
+  if (!d || d._err) return null;
+  const s = d.summary || {};
+  const l = (dir, lv) => s[dir]?.[lv]?.percentage ?? null;
+  return {
+    outL1: l('breakout','level_one'), outL2: l('breakout','level_two'), outL3: l('breakout','level_three'),
+    dnL1:  l('breakdown','level_one'), dnL2: l('breakdown','level_two'), dnL3: l('breakdown','level_three'),
+    nOut: d.totalBreakouts || 0, nDn: d.totalBreakdowns || 0,
+  };
+}
+
+function pIBCont(d) {
+  if (!d || d._err) return null;
+  const arr = Array.isArray(d.summary) ? d.summary : [];
+  const f = cat => arr.find(x => x.category === cat)?.percentage ?? null;
+  return { gGreen: f('green day after green open'), rRed: f('red day after red open') };
+}
+
+function pGapFill(d) {
+  if (!d || d._err) return null;
+  const arr = Array.isArray(d.summary) ? d.summary : [];
+  const f = cat => arr.find(x => x.category === cat)?.percentage ?? null;
+  return { upFill: f('gap up filled'), dnFill: f('gap down filled'), upFreq: f('gap up'), dnFreq: f('gap down') };
+}
+
+function pOpenStat(d) {
+  if (!d || d._err) return null;
+  const s = d.summary || {};
+  return {
+    abovePDH: +(s.daysAbovePreviousHighPercentage ?? 0).toFixed(1),
+    inRange:  +(s.daysOpeningBetweenHighLowPercentage ?? 0).toFixed(1),
+    belowPDL: +(s.daysBelowPreviousLowPercentage ?? 0).toFixed(1),
+    n: s.totalDays || 0,
+  };
+}
+
+function pPrevDay(d) {
+  if (!d || d._err) return null;
+  const s = d.summary || {};
+  return {
+    pdhPct: s.prevDayHigh?.percentage ?? null,      pdhN: s.prevDayHigh?.count ?? 0,
+    pdhGrn: s.prevDayHighGreen?.percentage ?? null,
+    pdlPct: s.prevDayLow?.percentage ?? null,       pdlN: s.prevDayLow?.count ?? 0,
+    pdlRed: s.prevDayLowRed?.percentage ?? null,
+  };
+}
+
+// ── Conflicts ─────────────────────────────────────────────────────────
+function getConflicts(id, bias) {
+  if (!bias || bias === 'neutral') return [];
+  const gf = pGapFill((S.data[id] || {}).gapFill);
+  if (!gf) return [];
+  const out = [];
+  if (bias === 'long'  && (gf.upFill ?? 0) >= 65) out.push(`Gap-up fill ${Math.round(gf.upFill)}% — likely fills downward`);
+  if (bias === 'short' && (gf.dnFill ?? 0) >= 65) out.push(`Gap-down fill ${Math.round(gf.dnFill)}% — likely fills upward`);
+  return out;
+}
+
+// ── Render helpers ────────────────────────────────────────────────────
+const fmt = n => (n == null ? '—' : `${Math.round(n)}%`);
+
+function sRow(label, pct, color, n, star) {
+  const w = Math.min(100, Math.max(0, pct ?? 0));
+  return `<div class="sr">
+    <span class="sr-lbl">${label}${star ? ' <span class="star">★</span>' : ''}</span>
+    <div class="sr-bar"><div class="sr-fil ${color || ''}" style="width:${w}%"></div></div>
+    <span class="sr-pct">${fmt(pct)}</span>
+    ${n ? `<span class="sr-n">${n}</span>` : ''}
+  </div>`;
+}
+
+// ── Mode bar ───────────────────────────────────────────────────────────
+function renderModeBar() {
+  const post  = isPost();
+  const badge = document.getElementById('mode-badge');
+  badge.textContent = post ? 'POST-IB' : 'PRE-IB';
+  badge.className   = 'mode-badge ' + (post ? 'post-badge' : 'pre-badge');
+  const t = nowET();
+  document.getElementById('mode-et').textContent =
+    String(t.getHours()).padStart(2, '0') + ':' + String(t.getMinutes()).padStart(2, '0') + ' ET';
+  document.getElementById('mode-toggle').textContent = S.override ? 'Reset auto' : 'Override';
+}
+
+setInterval(renderModeBar, 60000);
+
+// ── Cards ──────────────────────────────────────────────────────────────
+function renderCards() {
+  renderModeBar();
+  document.getElementById('cards').innerHTML = SESSIONS.map(renderCard).join('');
+
+  document.querySelectorAll('[data-bs]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const { bs: id, bv: v } = btn.dataset;
+      S.bias[id] = S.bias[id] === v ? null : v;
+      renderCards();
+    });
+  });
+  document.querySelectorAll('[data-cs]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const { cs: id, cv: v } = btn.dataset;
+      S.ibColor[id] = S.ibColor[id] === v ? null : v;
+      renderCards();
+    });
+  });
+}
+
+function renderCard(sess) {
+  const dow       = dowName();
+  const scheduled = sess.days.includes(dow);
+  const bias      = S.bias[sess.id] || null;
+  const post      = isPost();
+  const d         = S.data[sess.id] || {};
+  const cfls      = getConflicts(sess.id, bias);
+  const price     = S.prices[sess.ticker];
+  const priceStr  = price != null ? price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '';
+
+  return `<div class="card${cfls.length ? ' has-conflict' : ''}">
+  <div class="card-hd">
+    <div class="card-top">
+      <span class="card-name">${sess.name}</span>
+      <a class="card-link" href="https://www.edgeful.com/reports" target="_blank" rel="noopener">↗ Edgeful</a>
+      <span class="card-price" data-price="${sess.ticker}">${priceStr}</span>
+    </div>
+    <div class="card-sub">
+      <span>IB${sess.ep}${sess.note ? ` (${sess.note})` : ''} · ${sess.win} · ${sess.size}</span>
+      ${!scheduled ? '<span class="badge-oos">Not in schedule today</span>' : ''}
+    </div>
+  </div>
+
+  <div class="bias-row">
+    <button class="bias-btn ${bias==='long'    ? 'sel-long'    : ''}" data-bs="${sess.id}" data-bv="long">▲ Long</button>
+    <button class="bias-btn ${bias==='neutral' ? 'sel-neutral' : ''}" data-bs="${sess.id}" data-bv="neutral">— Neutral</button>
+    <button class="bias-btn ${bias==='short'   ? 'sel-short'   : ''}" data-bs="${sess.id}" data-bv="short">▼ Short</button>
+  </div>
+
+  ${cfls.length ? `<div class="conflict-box"><strong>⚠ CONFLICT</strong>${cfls.map(c => `• ${c}`).join('<br>')}</div>` : ''}
+  ${sess.ib ? renderIBSection(sess, d, post) : ''}
+  ${renderCtxSection(sess, d)}
+</div>`;
+}
+
+// ── IB section ────────────────────────────────────────────────────────
+function renderIBSection(sess, d, post) {
+  const std  = pIBStd(d.ibStd);
+  const wkd  = pIBWkd(d.ibWkd);
+  const ret  = pIBRet(d.ibRet);
+  const cont = pIBCont(d.ibCont);
+  const dow  = dowName();
+  const DAY  = { Mon:'Monday', Tue:'Tuesday', Wed:'Wednesday', Thu:'Thursday', Fri:'Friday' }[dow];
+
+  let h = `<div class="section"><div class="sec-title">IB Breakout</div>`;
+
+  if (d.ibStd && d.ibStd._err) {
+    h += `<div class="err-msg">${d.ibStd._err}</div>`;
+  } else if (std) {
+    h += sRow('Single break', std.sPct, 'g', `n=${std.sN}`);
+    h += sRow('Double break', std.bPct, 'y', `n=${std.bN}`);
+    h += sRow('No break',     std.nPct, 'r', `n=${std.nN}`);
+    h += `<div class="sub-note">${std.total} sessions</div>`;
+  } else {
+    h += `<div class="load-msg">Loading…</div>`;
+  }
+
+  if (wkd && DAY && wkd[DAY]) {
+    const w = wkd[DAY];
+    h += `<div class="dow-block">
+      <div class="sr"><span class="sr-lbl">${dow} — n=${w.n}</span></div>
+      ${sRow('Single break', w.sPct, 'g')}
+      ${sRow('Double break', w.bPct, 'y')}
+      ${sRow('No break',     w.nPct, 'r')}
+    </div>`;
+  }
+
+  h += `</div>`;
+
+  // Retracement
+  if (ret || (d.ibRet && d.ibRet._err)) {
+    h += `<div class="section"><div class="sec-title">Entry Retracement</div>`;
+    if (d.ibRet && d.ibRet._err) {
+      h += `<div class="err-msg">${d.ibRet._err}</div>`;
+    } else if (ret) {
+      h += `<div class="sub-note">After breakout — n=${ret.nOut}</div>`;
+      h += sRow('25% retrace', ret.outL1, '', '', sess.ep === 25);
+      h += sRow('50% retrace', ret.outL2, '', '', sess.ep === 50);
+      h += sRow('75% retrace', ret.outL3);
+      h += `<div class="sub-note" style="margin-top:8px">After breakdown — n=${ret.nDn}</div>`;
+      h += sRow('25% retrace', ret.dnL1, '', '', sess.ep === 25);
+      h += sRow('50% retrace', ret.dnL2, '', '', sess.ep === 50);
+      h += sRow('75% retrace', ret.dnL3);
+    } else {
+      h += `<div class="load-msg">Loading…</div>`;
+    }
+    h += `</div>`;
+  }
+
+  // Post-IB continuation
+  if (post) {
+    const ibCol = S.ibColor[sess.id] || null;
+    h += `<div class="section"><div class="sec-title">IB Candle Continuation</div>
+      <div class="ib-picker">
+        <span class="ib-lbl">IB closed:</span>
+        <button class="ib-cb ${ibCol==='green' ? 'sel-g' : ''}" data-cs="${sess.id}" data-cv="green">● Green</button>
+        <button class="ib-cb ${ibCol==='red'   ? 'sel-r' : ''}" data-cs="${sess.id}" data-cv="red">● Red</button>
+      </div>`;
+    if (cont) {
+      if (ibCol === 'green')      h += sRow('Green day continuation', cont.gGreen, 'g');
+      else if (ibCol === 'red')   h += sRow('Red day continuation',   cont.rRed,   'r');
+      else {
+        h += sRow('Green IB → green day', cont.gGreen, 'g');
+        h += sRow('Red IB → red day',     cont.rRed,   'r');
+      }
+    } else if (d.ibCont && d.ibCont._err) {
+      h += `<div class="err-msg">${d.ibCont._err}</div>`;
+    } else {
+      h += `<div class="load-msg">Loading…</div>`;
+    }
+    h += `</div>`;
+  }
+
+  return h;
+}
+
+// ── Context section ───────────────────────────────────────────────────
+function renderCtxSection(sess, d) {
+  const os  = pOpenStat(d.openingStats);
+  const pdr = pPrevDay(d.prevDayRange);
+  const gf  = pGapFill(d.gapFill);
+  const anyLoading = !d.openingStats && !d.prevDayRange && !d.gapFill;
+
+  let h = `<div class="section"><div class="sec-title">Direction &amp; Context</div>`;
+
+  if (anyLoading) {
+    h += `<div class="load-msg">Loading…</div>`;
+  } else {
+    if (d.openingStats && d.openingStats._err) {
+      h += `<div class="err-msg">${d.openingStats._err}</div>`;
+    } else if (os) {
+      h += sRow('Opens above PDH', os.abovePDH, 'g', `n=${os.n}`);
+      h += sRow('Opens in range',  os.inRange);
+      h += sRow('Opens below PDL', os.belowPDL, 'r');
+      h += `<div class="mini-div"></div>`;
+    }
+
+    if (d.prevDayRange && d.prevDayRange._err) {
+      h += `<div class="err-msg">${d.prevDayRange._err}</div>`;
+    } else if (pdr) {
+      h += sRow('PDH break rate', pdr.pdhPct, 'g', `n=${pdr.pdhN}`);
+      if (pdr.pdhGrn != null) h += `<div class="indent">${sRow('↳ Closes green (follow-through)', pdr.pdhGrn, 'g')}</div>`;
+      h += sRow('PDL break rate', pdr.pdlPct, 'r', `n=${pdr.pdlN}`);
+      if (pdr.pdlRed != null) h += `<div class="indent">${sRow('↳ Closes red (follow-through)', pdr.pdlRed, 'r')}</div>`;
+      h += `<div class="mini-div"></div>`;
+    }
+
+    if (d.gapFill && d.gapFill._err) {
+      h += `<div class="err-msg">${d.gapFill._err}</div>`;
+    } else if (gf) {
+      h += sRow('Gap-up fill rate',   gf.upFill, 'y', `${Math.round(gf.upFreq ?? 0)}% of days`);
+      h += sRow('Gap-down fill rate', gf.dnFill, 'y', `${Math.round(gf.dnFreq ?? 0)}% of days`);
+    }
+  }
+
+  h += `</div>`;
+  return h;
+}
+
+// ── Events ────────────────────────────────────────────────────────────
+document.querySelectorAll('.lb-btn').forEach(btn => btn.addEventListener('click', () => {
+  document.querySelectorAll('.lb-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  S.lookback = btn.dataset.lb;
+  loadAll();
+}));
+
+document.getElementById('refresh-btn').addEventListener('click', loadAll);
+
+document.getElementById('mode-toggle').addEventListener('click', () => {
+  S.override = S.override ? null : (isPost() ? 'pre' : 'post');
+  renderCards();
+});
+
+// ── Connect ───────────────────────────────────────────────────────────
+async function connect() {
+  const key = document.getElementById('key-input').value.trim();
+  if (!key) return;
+  const errEl = document.getElementById('setup-err');
+  const btn   = document.getElementById('connect-btn');
+  errEl.textContent = '';
+  btn.textContent   = 'Connecting…';
+  btn.disabled      = true;
+  S.key = key;
+  try {
+    await apiFetch('/report_calculation/previous-days-range-standard/futures/RTY', {
+      start_date: '2026-03-01', end_date: '2026-06-10',
+      start_time: '09:30:00',  end_time: '16:00:00', timezone: 'America/New_York',
+    });
+    sessionStorage.setItem('ef_key', key);
+    document.getElementById('setup').hidden    = true;
+    document.getElementById('dashboard').hidden = false;
+    loadAll();
+  } catch (e) {
+    S.key             = '';
+    errEl.textContent = e.message || 'Connection failed.';
+    btn.textContent   = 'Connect';
+    btn.disabled      = false;
+  }
+}
+
+document.getElementById('connect-btn').addEventListener('click', connect);
+document.getElementById('key-input').addEventListener('keydown', e => { if (e.key === 'Enter') connect(); });
+
+if (S.key) {
+  document.getElementById('setup').hidden    = true;
+  document.getElementById('dashboard').hidden = false;
+  loadAll();
+}
+</script>
+</body>
+</html>
