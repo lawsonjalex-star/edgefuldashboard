@@ -239,10 +239,11 @@ async function loadSession(sess,start_date,end_date) {
     insideBars:   safe(p('report_calculation','inside-bars-by-weekday'),ctx),
   };
   if (sess.ib) {
-    jobs.ibStd  = safe(p('intraday_calculation','initial-balance-breakout-standard'),ib);
-    jobs.ibWkd  = safe(p('intraday_calculation','initial-balance-breakout-by-weekday'),ib);
-    jobs.ibCont = safe(p('intraday_calculation','opening-candle-continuation-by-weekday'),ib);
-    jobs.ibRej  = safe(p('intraday_calculation','initial-balance-breakout-by-rejection'),ib);
+    jobs.ibStd   = safe(p('intraday_calculation','initial-balance-breakout-standard'),ib);
+    jobs.ibWkd   = safe(p('intraday_calculation','initial-balance-breakout-by-weekday'),ib);
+    jobs.ibCont  = safe(p('intraday_calculation','opening-candle-continuation-by-weekday'),ib);
+    jobs.ibRej   = safe(p('intraday_calculation','initial-balance-breakout-by-rejection'),ib);
+    jobs.ibLevels= safe(p('intraday_calculation','initial-balance-breakout-by-levels'),ib);
   }
   const keys=Object.keys(jobs), vals=await Promise.all(Object.values(jobs));
   S.data[sess.id]=Object.fromEntries(keys.map((k,i)=>[k,vals[i]]));
@@ -309,6 +310,12 @@ function pPrevDay(d) {
   return { pdhPct:s.prevDayHigh?.percentage??null, pdhN:s.prevDayHigh?.count??0, pdhGrn:s.prevDayHighGreen?.percentage??null, pdlPct:s.prevDayLow?.percentage??null, pdlN:s.prevDayLow?.count??0, pdlRed:s.prevDayLowRed?.percentage??null };
 }
 
+function pIBLevels(d) {
+  if (!d||d._err) return null;
+  const s=d.summary||{};
+  const dt=key=>{ const t=s[key]; return t?{n:t.totalDays,lvl:t.levels||{}}:null; };
+  return { breakout:dt('breakout days'), breakdown:dt('breakdown days') };
+}
 function pInsideBars(d) {
   if (!d||d._err) return null;
   const s=d.summary||{}, n=s.potentialInsideBarCount||0;
@@ -450,7 +457,7 @@ ${renderCtxSection(sess,d,edgefulBase)}
 // ── IB Breakout section ───────────────────────────────────
 function renderIBSection(sess,d,post,edgefulBase) {
   const dow=dowName(), DAY=DOW_MAP[dow];
-  const std=pIBStd(d.ibStd), wkd=pIBWkd(d.ibWkd), cont=pIBCont(daySlice(d.ibCont,DAY)), rej=pIBRej(d.ibRej);
+  const std=pIBStd(d.ibStd), wkd=pIBWkd(d.ibWkd), cont=pIBCont(daySlice(d.ibCont,DAY)), rej=pIBRej(d.ibRej), lev=pIBLevels(d.ibLevels);
   let h='';
 
   // IB Breakout
@@ -509,6 +516,31 @@ function renderIBSection(sess,d,post,edgefulBase) {
     h+=`<div style="font-size:11px;color:#555555;margin-top:8px;margin-bottom:5px">when IB LOW forms first (n=${rej.lFirstN})</div>`;
     h+=`<div class="indent">${sRow('→ ib high breaks',rej.lBreakHPct,null,true)}</div>`;
     h+=`<div class="indent">${sRow('→ ib low breaks',rej.lBreakLPct)}</div>`;
+  } else { h+=`<div class="load-msg">loading…</div>`; }
+
+  h+=`</div>`;
+
+  // Breakout levels
+  h+=`<div class="subsection-header">
+  <div style="display:flex;align-items:baseline;justify-content:space-between">
+    <h3 class="text-sm font-medium lowercase" style="color:#FFFFFF">breakout levels</h3>
+    <span class="source-label">from: <a href="${edgefulBase}/initial-balance-breakout/by-levels" target="_blank" rel="noopener">initial balance by levels</a></span>
+  </div>
+</div>
+<div class="sec-body">`;
+
+  if (d.ibLevels&&d.ibLevels._err) { h+=`<div class="err-msg">${d.ibLevels._err}</div>`; }
+  else if (lev) {
+    const LEVELS_UP   = ['0.5','1.0','1.5','2.0','2.5'];
+    const LEVELS_DOWN = ['-0.5','-1.0','-1.5','-2.0','-2.5'];
+    if (lev.breakout) {
+      h+=`<div style="font-size:11px;color:#555555;margin-bottom:6px">breakout extension — n=${lev.breakout.n}</div>`;
+      LEVELS_UP.forEach(k=>{ const v=lev.breakout.lvl[k]; if(v&&v.percentage>0) h+=sRow(`${k}× IB`,v.percentage,null,false,palette.primary); });
+    }
+    if (lev.breakdown) {
+      h+=`<div style="font-size:11px;color:#555555;margin:8px 0 6px">breakdown extension — n=${lev.breakdown.n}</div>`;
+      LEVELS_DOWN.forEach(k=>{ const v=lev.breakdown.lvl[k]; if(v&&v.percentage>0) h+=sRow(`${Math.abs(+k)}× IB`,v.percentage,null,false,palette.bearish); });
+    }
   } else { h+=`<div class="load-msg">loading…</div>`; }
 
   h+=`</div>`;
