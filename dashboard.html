@@ -91,6 +91,18 @@ table { font-feature-settings: "tnum"; }
 .odds-val  { font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums; }
 .odds-sub  { font-size: 11px; color: #555555; margin-top: 2px; }
 
+/* live IB bar */
+.wip-bar { display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(0,117,255,0.04); border-bottom: 1px solid #2A2A2A; flex-wrap: wrap; }
+.wip-lv  { display: flex; align-items: baseline; gap: 3px; }
+.wip-val { font-size: 14px; font-weight: 500; color: #FFFFFF; font-variant-numeric: tabular-nums; }
+.wip-sub { font-size: 10px; color: #555555; text-transform: uppercase; margin-left: 2px; }
+.wip-sep { color: #2A2A2A; font-size: 16px; font-weight: 300; }
+.wip-size { font-size: 11px; color: #C7C7C7; margin-left: 4px; }
+.wip-bucket { font-size: 10px; color: #555555; }
+.wip-status { font-size: 11px; margin-left: auto; white-space: nowrap; }
+.wip-dot { font-size: 8px; margin-right: 3px; }
+.wip-empty { font-size: 11px; color: #555555; padding: 8px 16px; }
+
 /* conflict */
 .conflict-box { margin: 4px 16px 8px; padding: 8px 12px; background: rgba(211,45,31,0.08); border: 1px solid #D32D1F; border-radius: 8px; font-size: 12px; color: #F87171; }
 .conflict-box strong { display: block; margin-bottom: 3px; font-weight: 500; }
@@ -156,7 +168,7 @@ footer { margin-top: 40px; padding: 20px 14px; border-top: 1px solid #2A2A2A; ma
 
 @media (min-width: 600px) {
   #cards, footer { padding-left: 20px; padding-right: 20px; }
-  .card-hd, .bias-row, .trade-panel, .verdict-wrap, .odds-wrap, .sec-body, .subsection-header { padding-left: 20px; padding-right: 20px; }
+  .card-hd, .bias-row, .trade-panel, .verdict-wrap, .odds-wrap, .sec-body, .subsection-header, .wip-bar { padding-left: 20px; padding-right: 20px; }
 }
 @media (min-width: 720px) {
   #cards { grid-template-columns: 1fr 1fr; max-width: 1120px; gap: 16px; padding: 16px; }
@@ -219,8 +231,11 @@ const S = {
   lookback: '1Y',
   override: null,
   bias: {}, ibColor: {}, data: {}, prices: {},
-  trade: {},       // { [sessId]: { ibHigh, ibLow, price, entry, stop, target, contracts } }
-  formedFirst: {}, // { [sessId]: 'high' | 'low' | 'unclear' }
+  trade: {},            // { [sessId]: { ibHigh, ibLow, price, entry, stop, target, contracts } }
+  formedFirst: {},      // { [sessId]: 'high' | 'low' | 'unclear' }
+  wipIB: {},            // { [sessId]: live IB data from WIP feed }
+  tradeManual: {},      // { [sessId]: { ibHigh: bool, ibLow: bool } } — WIP won't overwrite manual fields
+  formedFirstManual: {},// { [sessId]: bool } — user explicitly clicked a formed-first button
 };
 const charts = {};
 
@@ -263,6 +278,7 @@ async function loadAll() {
   const {start_date,end_date}=dateRange(S.lookback);
   await Promise.all(SESSIONS.map(sess=>loadSession(sess,start_date,end_date)));
   loadPrices().catch(()=>{});
+  loadWIP().catch(()=>{});
   renderCards(); initCharts();
 }
 
@@ -282,7 +298,8 @@ async function loadSession(sess,start_date,end_date) {
     jobs.ibCont   = safe(p('intraday_calculation','opening-candle-continuation-by-weekday'),ib);
     jobs.ibRej    = safe(p('intraday_calculation','initial-balance-breakout-by-rejection'),ib);
     jobs.ibLevels = safe(p('intraday_calculation','initial-balance-breakout-by-levels'),ib);
-    jobs.ibSize   = safe(p('intraday_calculation','initial-balance-breakout-by-size'),ib);
+    jobs.ibSize        = safe(p('intraday_calculation','initial-balance-breakout-by-size'),ib);
+    jobs.ibRetracement = safe(p('intraday_calculation','initial-balance-breakout-by-retracement'),ib);
   }
   const keys=Object.keys(jobs), vals=await Promise.all(Object.values(jobs));
   S.data[sess.id]=Object.fromEntries(keys.map((k,i)=>[k,vals[i]]));
@@ -339,6 +356,12 @@ function pIBSize(d) {
   const s=d.summary||{};
   const parse=bucket=>{ const b=s[bucket]; if(!b||!b.totalDays) return null; const n=b.totalDays; return { n, abovePct:+(b.priceBreakAboveCount/n*100).toFixed(1), belowPct:+(b.priceBreakBelowCount/n*100).toFixed(1) }; };
   return { '0 - 0.2%':parse('0 - 0.2%'), '0.2 - 0.39%':parse('0.2 - 0.39%'), '0.4 - 0.59%':parse('0.4 - 0.59%'), '0.6 - 0.89%':parse('0.6 - 0.89%'), '> 0.9%':parse('> 0.9%') };
+}
+function pIBRetracement(d) {
+  if (!d||d._err) return null;
+  const s=d.summary||{};
+  const lvl=sec=>{ const r=s[sec]; if(!r) return null; return { l1:r.level_one?.percentage??null, l1n:r.level_one?.frequency??0, l2:r.level_two?.percentage??null, l2n:r.level_two?.frequency??0, l3:r.level_three?.percentage??null, l3n:r.level_three?.frequency??0 }; };
+  return { breakout:lvl('breakout'), breakdown:lvl('breakdown'), nBreakouts:d.totalBreakouts||0, nBreakdowns:d.totalBreakdowns||0 };
 }
 function pGapFill(d) {
   if (!d||d._err) return null;
@@ -474,6 +497,97 @@ function initCharts() {
   });
 }
 
+// ── Live WIP feed ─────────────────────────────────────────
+async function loadWIP() {
+  if (!S.key) return;
+  try {
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 13000);
+    const resp = await fetch('https://api.edgeful.com/live/futures/wip', {
+      headers: { Authorization: `Bearer ${S.key}` },
+      signal: ctrl.signal
+    });
+    clearTimeout(tid);
+    if (!resp.ok) return;
+    const reader = resp.body.getReader();
+    const dec = new TextDecoder();
+    let buf = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      for (let i = 0; i < lines.length - 1; i++) {
+        const ln = lines[i].trim();
+        if (!ln.startsWith('data: ')) continue;
+        try {
+          const wip = JSON.parse(ln.slice(6));
+          reader.cancel();
+          processWIP(wip);
+          return;
+        } catch {}
+      }
+      buf = lines[lines.length - 1];
+    }
+  } catch(e) { /* silent — pre-market or auth issue */ }
+}
+
+function processWIP(wip) {
+  SESSIONS.forEach(sess => {
+    if (!sess.ib) return;
+    const ibLive = (wip[sess.ticker] || {}).initial_balance_by_size_60min_wick;
+    if (!ibLive) return;
+    S.wipIB[sess.id] = {
+      ibHigh: ibLive.ib_high, ibLow: ibLive.ib_low,
+      ibSize: ibLive.ib_size, ibSizeBucket: ibLive.ib_size_bucket,
+      hasFormed: ibLive.has_formed, firstBreak: ibLive.first_break,
+      reportStatus: ibLive.report_status
+    };
+    // Auto-populate IB H/L unless user manually set those fields
+    if (!S.trade[sess.id]) S.trade[sess.id] = {};
+    const manual = S.tradeManual[sess.id] || {};
+    if (!manual.ibHigh && ibLive.ib_high != null) S.trade[sess.id].ibHigh = ibLive.ib_high;
+    if (!manual.ibLow  && ibLive.ib_low  != null) S.trade[sess.id].ibLow  = ibLive.ib_low;
+    // Auto-set formed-first unless user manually toggled it
+    if (!S.formedFirstManual[sess.id] && ibLive.has_formed && ibLive.first_break) {
+      S.formedFirst[sess.id] = ibLive.first_break === 'IB high' ? 'high' : 'low';
+    }
+    // Patch DOM without full re-render
+    const wipDiv = document.getElementById(`wip-status-${sess.id}`);
+    if (wipDiv) wipDiv.innerHTML = renderWIPStatus(sess);
+    ['ibHigh','ibLow'].forEach(field => {
+      if (manual[field]) return;
+      const inp = document.querySelector(`[data-ti="${sess.id}"][data-tf="${field}"]`);
+      if (inp && document.activeElement !== inp) inp.value = S.trade[sess.id][field] ?? '';
+    });
+    document.querySelectorAll(`[data-ffs="${sess.id}"]`).forEach(b => {
+      if (S.formedFirstManual[sess.id]) return;
+      const sel = S.formedFirst[sess.id] === b.dataset.ffv;
+      b.className = 'ff-btn' + (sel ? (b.dataset.ffv==='high'?' ff-high':b.dataset.ffv==='low'?' ff-low':' ff-unclear') : '');
+    });
+    updateTradeUI(sess.id);
+  });
+}
+
+function renderWIPStatus(sess) {
+  const w = S.wipIB[sess.id];
+  if (!w) return '';
+  const fmtPrice = v => v != null ? v.toLocaleString('en-US', { maximumFractionDigits: 2 }) : '—';
+  const sColor = w.reportStatus === 'completed' ? '#22C55E' : w.hasFormed ? '#D89700' : '#0075FF';
+  const sLabel = w.reportStatus === 'completed' ? 'complete' : w.hasFormed ? 'formed' : 'forming';
+  const szColor = w.ibSize > 1.0 ? '#D89700' : '#C7C7C7';
+  return `<div class="wip-bar">
+    <div class="wip-lv"><span class="wip-val">${fmtPrice(w.ibHigh)}</span><span class="wip-sub">H</span></div>
+    <span class="wip-sep">/</span>
+    <div class="wip-lv"><span class="wip-val">${fmtPrice(w.ibLow)}</span><span class="wip-sub">L</span></div>
+    <span class="wip-size" style="color:${szColor}">${w.ibSize != null ? w.ibSize.toFixed(2)+'%' : '—'}</span>
+    <span class="wip-bucket">${w.ibSizeBucket ?? '—'}</span>
+    <span class="wip-status" style="color:${sColor}"><span class="wip-dot">●</span>${sLabel}</span>
+  </div>`;
+}
+// Poll WIP every 15s
+setInterval(() => { if (S.key) loadWIP().catch(() => {}); }, 15000);
+
 // ── Dynamic trade panel helpers ───────────────────────────
 function renderMathContent(sess) {
   const tm=calcTrade(sess);
@@ -579,6 +693,11 @@ function renderCards() {
       const{ti:id,tf:field}=inp.dataset;
       if(!S.trade[id]) S.trade[id]={};
       S.trade[id][field]=inp.value===''?null:+inp.value;
+      // Track manual entry for ibHigh/ibLow so WIP doesn't overwrite them
+      if (field==='ibHigh'||field==='ibLow') {
+        if(!S.tradeManual[id]) S.tradeManual[id]={};
+        S.tradeManual[id][field] = inp.value !== '';
+      }
       updateTradeUI(id);
     });
   });
@@ -587,6 +706,7 @@ function renderCards() {
     btn.addEventListener('click',()=>{
       const{ffs:id,ffv:v}=btn.dataset;
       S.formedFirst[id]=S.formedFirst[id]===v?null:v;
+      S.formedFirstManual[id] = S.formedFirst[id] != null; // locked once user clicks
       document.querySelectorAll(`[data-ffs="${id}"]`).forEach(b=>{
         const sel=S.formedFirst[id]===b.dataset.ffv;
         b.className='ff-btn'+(sel?(b.dataset.ffv==='high'?' ff-high':b.dataset.ffv==='low'?' ff-low':' ff-unclear'):'');
@@ -636,6 +756,8 @@ function renderCard(sess) {
     ${!sched?'<span class="badge-oos">not in schedule today</span>':''}
   </div>
 </div>
+
+<div id="wip-status-${sess.id}">${sess.ib?renderWIPStatus(sess):''}</div>
 
 <div class="bias-row">
   <button class="bias-btn${bias==='long'   ?' sel-long':''}"    data-bs="${sess.id}" data-bv="long">▲ long</button>
@@ -696,6 +818,30 @@ function renderIBSection(sess,d,post,edgefulBase) {
     h+=`<div style="font-size:11px;color:#555555;margin-top:8px;margin-bottom:5px">when IB LOW forms first (n=${rej.lFirstN})</div>`;
     h+=`<div class="indent">${sRow('→ ib high breaks',rej.lBreakHPct,null,true)}</div>`;
     h+=`<div class="indent">${sRow('→ ib low breaks',rej.lBreakLPct)}</div>`;
+  } else { h+=`<div class="load-msg">loading…</div>`; }
+  h+=`</div>`;
+
+  // IB retracement levels
+  const ret=pIBRetracement(d.ibRetracement);
+  const wLive=S.wipIB[sess.id];
+  h+=`<div class="subsection-header"><div style="display:flex;align-items:baseline;justify-content:space-between"><h3 class="text-sm font-medium lowercase" style="color:#FFFFFF">ib retracement</h3><span class="source-label">from: <a href="${edgefulBase}/initial-balance-breakout/by-retracement" target="_blank" rel="noopener">initial balance by retracement</a></span></div></div>
+<div class="sec-body">`;
+  if (d.ibRetracement&&d.ibRetracement._err) { h+=`<div class="err-msg">${d.ibRetracement._err}</div>`; }
+  else if (ret) {
+    const bucketTag = wLive?.ibSizeBucket ? `<span style="font-size:10px;color:#555555;margin-left:6px">IB today: ${wLive.ibSizeBucket}</span>` : '';
+    h+=`<div style="font-size:11px;color:#555555;margin-bottom:6px">how far price retraces into the IB after breaking (not filtered by size)${bucketTag}</div>`;
+    if (ret.breakout) {
+      h+=`<div style="font-size:11px;color:#555555;margin-bottom:5px">breakout days (n=${ret.nBreakouts})</div>`;
+      h+=`<div class="indent">${sRow('→ 25% retracement hit', ret.breakout.l1, null, false, palette.primary)}</div>`;
+      h+=`<div class="indent">${sRow('→ 50% retracement hit', ret.breakout.l2, null, false, palette.primary)}</div>`;
+      h+=`<div class="indent">${sRow('→ 75% retracement hit', ret.breakout.l3, null, false, palette.primary)}</div>`;
+    }
+    if (ret.breakdown) {
+      h+=`<div style="font-size:11px;color:#555555;margin-top:8px;margin-bottom:5px">breakdown days (n=${ret.nBreakdowns})</div>`;
+      h+=`<div class="indent">${sRow('→ 25% retracement hit', ret.breakdown.l1, null, false, palette.bearish)}</div>`;
+      h+=`<div class="indent">${sRow('→ 50% retracement hit', ret.breakdown.l2, null, false, palette.bearish)}</div>`;
+      h+=`<div class="indent">${sRow('→ 75% retracement hit', ret.breakdown.l3, null, false, palette.bearish)}</div>`;
+    }
   } else { h+=`<div class="load-msg">loading…</div>`; }
   h+=`</div>`;
 
