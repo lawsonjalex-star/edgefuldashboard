@@ -14,7 +14,6 @@
 body { font-family: 'Poppins', sans-serif; background: #09090B; color: #C7C7C7; }
 .card { background: #09090B; border: 1px solid #2A2A2A; border-radius: 12px; overflow: hidden; }
 .card.has-conflict { border-color: #D32D1F; }
-.stat-num { font-weight: 500; font-feature-settings: "tnum"; }
 table { font-feature-settings: "tnum"; }
 
 .subsection-header { background: #121212; border-top: 1px solid #2A2A2A; border-bottom: 1px solid #2A2A2A; padding: 10px 16px; }
@@ -25,25 +24,75 @@ table { font-feature-settings: "tnum"; }
 .meta-sep { color: #555555; }
 .meta-line a.meta-link { color: #0075FF; text-decoration: none; }
 
-.chip { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; }
-.chip-bullish { background: rgba(34,197,94,0.15); color: #4ADE80; }
-.chip-bearish { background: rgba(211,45,31,0.15); color: #F87171; }
-.chip-warning { background: rgba(216,151,0,0.15); color: #FACC15; }
-.chip-neutral { background: rgba(85,85,85,0.2); color: #C7C7C7; }
 .badge { display: inline-block; padding: 2px 9px; border-radius: 6px; font-size: 11px; font-weight: 500; letter-spacing: 0.03em; }
 .badge-pre  { background: rgba(0,117,255,0.15); color: #60A5FA; border: 1px solid rgba(0,117,255,0.3); }
 .badge-post { background: rgba(34,197,94,0.15); color: #4ADE80; border: 1px solid rgba(34,197,94,0.3); }
 .badge-oos  { background: rgba(216,151,0,0.12); color: #D89700; border: 1px solid rgba(216,151,0,0.3); font-size: 10px; padding: 1px 7px; border-radius: 10px; letter-spacing: 0.04em; text-transform: uppercase; }
 
-/* bias buttons */
-.bias-row { display: flex; gap: 6px; padding: 10px 16px; }
+/* direction buttons */
+.bias-row { display: flex; gap: 6px; padding: 10px 16px 6px; }
 .bias-btn { flex: 1; padding: 9px 4px; background: none; border: 1px solid #2A2A2A; border-radius: 8px; color: #555555; cursor: pointer; font-size: 12px; font-weight: 500; min-height: 44px; font-family: 'Poppins', sans-serif; }
 .sel-long    { background: rgba(34,197,94,0.12);  color: #22C55E; border-color: #22C55E; }
 .sel-neutral { background: rgba(85,85,85,0.12);   color: #C7C7C7; border-color: #555555; }
 .sel-short   { background: rgba(211,45,31,0.12);  color: #D32D1F; border-color: #D32D1F; }
 
+/* trade input panel */
+.trade-panel { padding: 6px 16px 10px; }
+.trade-grid   { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px 8px; margin-bottom: 8px; }
+.trade-grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 0.75fr; gap: 6px 8px; }
+.trade-field  { display: flex; flex-direction: column; gap: 3px; }
+.trade-lbl    { font-size: 10px; color: #555555; text-transform: uppercase; letter-spacing: 0.04em; }
+.trade-inp    { background: #121212; border: 1px solid #2A2A2A; border-radius: 6px; padding: 7px 8px; color: #FFFFFF; font-size: 13px; font-family: 'Poppins', sans-serif; font-variant-numeric: tabular-nums; width: 100%; outline: none; min-height: 36px; -moz-appearance:textfield; }
+.trade-inp:focus { border-color: #0075FF; }
+.trade-inp::-webkit-outer-spin-button,.trade-inp::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+
+/* formed first */
+.ff-row { display: flex; align-items: center; gap: 6px; padding: 8px 0 0; }
+.ff-lbl { font-size: 11px; color: #555555; white-space: nowrap; }
+.ff-btn { flex: 1; padding: 6px 4px; background: none; border: 1px solid #2A2A2A; border-radius: 7px; color: #555555; cursor: pointer; font-size: 11px; font-weight: 500; min-height: 34px; font-family: 'Poppins', sans-serif; }
+.ff-high    { background: rgba(211,45,31,0.12);  color: #D32D1F; border-color: #D32D1F; }
+.ff-low     { background: rgba(34,197,94,0.12);  color: #22C55E; border-color: #22C55E; }
+.ff-unclear { background: rgba(216,151,0,0.12);  color: #D89700; border-color: #D89700; }
+
+/* math strip */
+.math-strip { display: grid; grid-template-columns: repeat(4,1fr); border-top: 1px solid #2A2A2A; border-bottom: 1px solid #2A2A2A; }
+.math-cell  { padding: 9px 10px; border-right: 1px solid #2A2A2A; }
+.math-cell:last-child { border-right: none; }
+.math-lbl   { font-size: 10px; color: #555555; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 3px; }
+.math-val   { font-size: 15px; font-weight: 500; font-variant-numeric: tabular-nums; }
+
+/* verdict */
+.verdict-wrap { padding: 10px 16px 4px; }
+.verdict      { border-radius: 10px; padding: 14px 16px; }
+.verdict-go      { background: rgba(34,197,94,0.09);  border: 1px solid rgba(34,197,94,0.35); }
+.verdict-no      { background: rgba(211,45,31,0.09);  border: 1px solid rgba(211,45,31,0.35); }
+.verdict-caution { background: rgba(216,151,0,0.09);  border: 1px solid rgba(216,151,0,0.35); }
+.verdict-pending { background: rgba(85,85,85,0.05);   border: 1px solid #2A2A2A; }
+.verdict-label   { font-size: 26px; font-weight: 500; letter-spacing: -0.02em; margin-bottom: 8px; }
+.verdict-go      .verdict-label { color: #22C55E; }
+.verdict-no      .verdict-label { color: #D32D1F; }
+.verdict-caution .verdict-label { color: #D89700; }
+.verdict-pending .verdict-label { color: #555555; font-size: 13px; font-weight: 400; margin-bottom: 0; }
+.vr-list  { display: flex; flex-direction: column; gap: 4px; }
+.vr-item  { font-size: 12px; display: flex; gap: 7px; align-items: flex-start; }
+.vr-dot   { flex-shrink: 0; margin-top: 2px; width: 6px; height: 6px; border-radius: 50%; }
+.vr-block .vr-dot { background: #D32D1F; }
+.vr-warn  .vr-dot { background: #D89700; }
+.vr-pass  .vr-dot { background: #22C55E; }
+.vr-block { color: #F87171; }
+.vr-warn  { color: #FACC15; }
+.vr-pass  { color: #4ADE80; }
+
+/* visual odds */
+.odds-wrap { padding: 10px 16px 4px; }
+.odds-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.odds-cell { background: #121212; border: 1px solid #2A2A2A; border-radius: 8px; padding: 10px 12px; }
+.odds-lbl  { font-size: 10px; color: #555555; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 4px; }
+.odds-val  { font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.odds-sub  { font-size: 11px; color: #555555; margin-top: 2px; }
+
 /* conflict */
-.conflict-box { margin: 0 16px 10px; padding: 8px 12px; background: rgba(211,45,31,0.08); border: 1px solid #D32D1F; border-radius: 8px; font-size: 12px; color: #F87171; }
+.conflict-box { margin: 4px 16px 8px; padding: 8px 12px; background: rgba(211,45,31,0.08); border: 1px solid #D32D1F; border-radius: 8px; font-size: 12px; color: #F87171; }
 .conflict-box strong { display: block; margin-bottom: 3px; font-weight: 500; }
 
 /* stat rows */
@@ -66,10 +115,10 @@ table { font-feature-settings: "tnum"; }
 .ib-green { background: rgba(34,197,94,0.12);  color: #22C55E; border-color: #22C55E; }
 .ib-red   { background: rgba(211,45,31,0.12); color: #D32D1F; border-color: #D32D1F; }
 
-.sec-body   { padding: 12px 16px; }
-.load-msg   { font-size: 12px; color: #555555; padding: 4px 0; }
-.err-msg    { font-size: 12px; color: #D32D1F; padding: 4px 0; }
-.indent     { padding-left: 14px; }
+.sec-body { padding: 12px 16px; }
+.load-msg { font-size: 12px; color: #555555; padding: 4px 0; }
+.err-msg  { font-size: 12px; color: #D32D1F; padding: 4px 0; }
+.indent   { padding-left: 14px; }
 
 /* setup */
 #setup { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; gap: 14px; text-align: center; }
@@ -93,11 +142,9 @@ table { font-feature-settings: "tnum"; }
 #mode-et  { font-size: 12px; color: #555555; }
 #mode-ovr { margin-left: auto; padding: 3px 8px; background: none; border: 1px solid #2A2A2A; border-radius: 4px; color: #555555; cursor: pointer; font-size: 11px; font-family: 'Poppins', sans-serif; }
 
-/* cards container */
+/* cards */
 #cards { padding: 14px; display: grid; grid-template-columns: 1fr; gap: 14px; max-width: 560px; margin: 0 auto; }
-
-/* card header */
-.card-hd { padding: 12px 16px 10px; }
+.card-hd { padding: 12px 16px 8px; }
 .card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
 .card-name { font-size: 16px; font-weight: 500; color: #FFFFFF; }
 .card-link { font-size: 11px; color: #555555; text-decoration: none; padding: 2px 6px; border-radius: 4px; border: 1px solid #2A2A2A; }
@@ -105,25 +152,21 @@ table { font-feature-settings: "tnum"; }
 .card-price { margin-left: auto; font-size: 12px; color: #555555; font-variant-numeric: tabular-nums; min-width: 60px; text-align: right; }
 .card-sub { font-size: 12px; color: #555555; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 
-/* footer */
 footer { margin-top: 40px; padding: 20px 14px; border-top: 1px solid #2A2A2A; max-width: 560px; margin-left: auto; margin-right: auto; }
 
 @media (min-width: 600px) {
   #cards, footer { padding-left: 20px; padding-right: 20px; }
-  .card-hd, .bias-row, .sec-body, .subsection-header { padding-left: 20px; padding-right: 20px; }
+  .card-hd, .bias-row, .trade-panel, .verdict-wrap, .odds-wrap, .sec-body, .subsection-header { padding-left: 20px; padding-right: 20px; }
 }
-
 @media (min-width: 720px) {
   #cards { grid-template-columns: 1fr 1fr; max-width: 1120px; gap: 16px; padding: 16px; }
   footer { max-width: 1120px; }
 }
-
-
 </style>
 </head>
 <body>
 
-<!-- ═══════════════════════ SETUP ═══════════════════════════ -->
+<!-- SETUP -->
 <div id="setup">
   <div class="text-xs uppercase tracking-wider mb-2" style="color:#555555">edgeful · futures</div>
   <h1 class="text-3xl font-medium lowercase" style="color:#FFFFFF">ib v4 dashboard</h1>
@@ -134,9 +177,8 @@ footer { margin-top: 40px; padding: 20px 14px; border-top: 1px solid #2A2A2A; ma
   <p class="text-xs lowercase" style="color:#555555;max-width:280px">must be served over http (replit, vs code live server) — not opened as a local file.</p>
 </div>
 
-<!-- ═══════════════════════ DASHBOARD ═══════════════════════ -->
+<!-- DASHBOARD -->
 <div id="dashboard" hidden>
-
   <div id="hdr">
     <h1>ib v4</h1>
     <div class="lb-grp">
@@ -146,32 +188,29 @@ footer { margin-top: 40px; padding: 20px 14px; border-top: 1px solid #2A2A2A; ma
     </div>
     <button id="ref-btn" title="refresh data">⟳</button>
   </div>
-
   <div id="mode-bar">
     <span id="mode-badge" class="badge badge-pre">pre-ib</span>
     <span id="mode-et"></span>
     <button id="mode-ovr">override</button>
   </div>
-
   <div id="cards"></div>
-
   <footer>
     <p class="text-xs lowercase" style="color:#555555">data from <a href="https://edgeful.com" style="color:#C7C7C7;text-decoration:none">edgeful.com</a> · historical performance is not a prediction of future results</p>
     <p class="text-xs lowercase mt-1" style="color:#555555">generated <span id="gen-date"></span> · for educational purposes only</p>
   </footer>
-
 </div>
 
 <script>
 'use strict';
 const BASE = 'https://api.edgeful.com';
 
+// pv = $ per index point for the micro contract used
 const SESSIONS = [
-  { id:'nq-ny',     name:'NQ NY',     ticker:'NQ',  mt:'futures', ib:true,  ep:25, days:['Mon','Wed','Thu','Fri'],       size:'2 MNQ', win:'09:30–10:30 ET', s:'09:30:00', e:'16:00:00' },
-  { id:'es-ny',     name:'ES NY',     ticker:'ES',  mt:'futures', ib:true,  ep:25, days:['Mon','Tue','Wed','Thu','Fri'], size:'TBD',   win:'09:30–10:30 ET', s:'09:30:00', e:'16:00:00' },
-  { id:'nq-london', name:'NQ London', ticker:'NQ',  mt:'futures', ib:false, ep:50, days:['Thu','Fri'],                   size:'8 MNQ', win:'03:00–04:00 ET', s:'03:00:00', e:'10:00:00' },
-  { id:'cl-ny',     name:'CL NY',     ticker:'CL',  mt:'futures', ib:true,  ep:50, days:['Mon','Tue','Wed'],             size:'2 MCL', win:'09:30–10:30 ET', s:'09:30:00', e:'16:00:00' },
-  { id:'rty',       name:'RTY',       ticker:'RTY', mt:'futures', ib:true,  ep:25, days:['Mon','Thu','Fri'],             size:'7 M2K', win:'09:30–10:30 ET', s:'09:30:00', e:'16:00:00', note:'IB ≥ 25pts' },
+  { id:'nq-ny',     name:'NQ NY',     ticker:'NQ',  mt:'futures', ib:true,  ep:25, days:['Mon','Wed','Thu','Fri'],       size:'2 MNQ', win:'09:30–10:30 ET', s:'09:30:00', e:'16:00:00', pv:2   },
+  { id:'es-ny',     name:'ES NY',     ticker:'ES',  mt:'futures', ib:true,  ep:25, days:['Mon','Tue','Wed','Thu','Fri'], size:'TBD',   win:'09:30–10:30 ET', s:'09:30:00', e:'16:00:00', pv:5   },
+  { id:'nq-london', name:'NQ London', ticker:'NQ',  mt:'futures', ib:false, ep:50, days:['Thu','Fri'],                   size:'8 MNQ', win:'03:00–04:00 ET', s:'03:00:00', e:'10:00:00', pv:2   },
+  { id:'cl-ny',     name:'CL NY',     ticker:'CL',  mt:'futures', ib:true,  ep:50, days:['Mon','Tue','Wed'],             size:'2 MCL', win:'09:30–10:30 ET', s:'09:30:00', e:'16:00:00', pv:100 },
+  { id:'rty',       name:'RTY',       ticker:'RTY', mt:'futures', ib:true,  ep:25, days:['Mon','Thu','Fri'],             size:'7 M2K', win:'09:30–10:30 ET', s:'09:30:00', e:'16:00:00', pv:10, note:'IB ≥ 25pts' },
 ];
 const IB_EXTRA = { ib_period:'60min', timeframe:'5min' };
 
@@ -180,23 +219,22 @@ const S = {
   lookback: '1Y',
   override: null,
   bias: {}, ibColor: {}, data: {}, prices: {},
+  trade: {},       // { [sessId]: { ibHigh, ibLow, price, entry, stop, target, contracts } }
+  formedFirst: {}, // { [sessId]: 'high' | 'low' | 'unclear' }
 };
 const charts = {};
 
-// ── Palette (mirrors chart-recipes.md) ────────────────────
 const palette = { bullish:'#22C55E', bearish:'#D32D1F', warning:'#D89700', primary:'#0075FF', neutral:'#555555', textSecondary:'#C7C7C7', grid:'#2A2A2A', surface:'#121212' };
-const fill = { bullish:'rgba(34,197,94,0.7)', bearish:'rgba(211,45,31,0.7)', warning:'rgba(216,151,0,0.7)', primary:'rgba(0,117,255,0.7)', neutral:'rgba(85,85,85,0.4)' };
 const series = { primary:'#0075FF', secondary:'#3D4B5C', tertiary:'#C7C7C7' };
 const seriesFill = { primary:'rgba(0,117,255,0.85)', secondary:'rgba(61,75,92,0.85)', tertiary:'rgba(199,199,199,0.65)' };
 const baseTooltip = { backgroundColor:palette.surface, titleColor:'#FFFFFF', bodyColor:palette.textSecondary, borderColor:palette.grid, borderWidth:1, padding:10, cornerRadius:6, titleFont:{family:'Poppins',size:12,weight:'500'}, bodyFont:{family:'Poppins',size:12,weight:'400'} };
-const baseScales = { x:{ ticks:{color:palette.textSecondary,font:{family:'Poppins',size:12}}, grid:{color:palette.grid,drawBorder:false} }, y:{ ticks:{color:palette.textSecondary,font:{family:'Poppins',size:12}}, grid:{color:palette.grid,drawBorder:false}, beginAtZero:true } };
 const baseOptions = { responsive:true, maintainAspectRatio:false, plugins:{ legend:{labels:{color:palette.textSecondary,font:{family:'Poppins',size:12}}}, tooltip:baseTooltip } };
 
 // ── Time ──────────────────────────────────────────────────
 function nowET()   { return new Date(new Date().toLocaleString('en-US',{timeZone:'America/New_York'})); }
 function dowName() { return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][nowET().getDay()]; }
 function isPost()  { if (S.override) return S.override==='post'; const t=nowET(); return t.getHours()>10||(t.getHours()===10&&t.getMinutes()>=30); }
-function fmtDate(d) { const m=String(d.getMonth()+1).padStart(2,'0'),dy=String(d.getDate()).padStart(2,'0'),y=String(d.getFullYear()).slice(-2); return `${m}/${dy}/${y}`; }
+function fmtDate(d){ const m=String(d.getMonth()+1).padStart(2,'0'),dy=String(d.getDate()).padStart(2,'0'),y=String(d.getFullYear()).slice(-2); return `${m}/${dy}/${y}`; }
 function dateRange(lb) {
   const end=new Date(), start=new Date();
   if (lb==='1Y') start.setFullYear(start.getFullYear()-1);
@@ -239,11 +277,12 @@ async function loadSession(sess,start_date,end_date) {
     insideBars:   safe(p('report_calculation','inside-bars-by-weekday'),ctx),
   };
   if (sess.ib) {
-    jobs.ibStd   = safe(p('intraday_calculation','initial-balance-breakout-standard'),ib);
-    jobs.ibWkd   = safe(p('intraday_calculation','initial-balance-breakout-by-weekday'),ib);
-    jobs.ibCont  = safe(p('intraday_calculation','opening-candle-continuation-by-weekday'),ib);
-    jobs.ibRej   = safe(p('intraday_calculation','initial-balance-breakout-by-rejection'),ib);
-    jobs.ibLevels= safe(p('intraday_calculation','initial-balance-breakout-by-levels'),ib);
+    jobs.ibStd    = safe(p('intraday_calculation','initial-balance-breakout-standard'),ib);
+    jobs.ibWkd    = safe(p('intraday_calculation','initial-balance-breakout-by-weekday'),ib);
+    jobs.ibCont   = safe(p('intraday_calculation','opening-candle-continuation-by-weekday'),ib);
+    jobs.ibRej    = safe(p('intraday_calculation','initial-balance-breakout-by-rejection'),ib);
+    jobs.ibLevels = safe(p('intraday_calculation','initial-balance-breakout-by-levels'),ib);
+    jobs.ibSize   = safe(p('intraday_calculation','initial-balance-breakout-by-size'),ib);
   }
   const keys=Object.keys(jobs), vals=await Promise.all(Object.values(jobs));
   S.data[sess.id]=Object.fromEntries(keys.map((k,i)=>[k,vals[i]]));
@@ -271,11 +310,6 @@ function pIBWkd(d) {
   ['Monday','Tuesday','Wednesday','Thursday','Friday'].forEach(day=>{ const w=(d.summary||{})[day]; if(!w) return; out[day]={n:w.totalDays||0,sPct:w.singleBreak?.percentage??0,bPct:w.bothBroken?.percentage??0,nPct:w.neitherBroken?.percentage??0}; });
   return out;
 }
-function pIBRet(d) {
-  if (!d||d._err) return null;
-  const s=d.summary||{}, l=(dir,lv)=>s[dir]?.[lv]?.percentage??null;
-  return { outL1:l('breakout','level_one'), outL2:l('breakout','level_two'), outL3:l('breakout','level_three'), dnL1:l('breakdown','level_one'), dnL2:l('breakdown','level_two'), dnL3:l('breakdown','level_three'), nOut:d.totalBreakouts||0, nDn:d.totalBreakdowns||0 };
-}
 function pIBCont(d) {
   if (!d||d._err) return null;
   const arr=Array.isArray(d.summary)?d.summary:[], f=cat=>arr.find(x=>x.category===cat)?.percentage??null;
@@ -288,48 +322,42 @@ function pIBRej(d) {
   const hBH=f('IB high first break IB high'), hBL=f('IB high first break IB low');
   const lBH=f('IB low first break IB high'), lBL=f('IB low first break IB low');
   return {
-    hFirstPct: hF?+hF.percentage:null, hFirstN: hF?.frequency||0,
-    lFirstPct: lF?+lF.percentage:null, lFirstN: lF?.frequency||0,
-    hBreakHPct: hBH?+hBH.percentage:null, hBreakLPct: hBL?+hBL.percentage:null,
-    lBreakHPct: lBH?+lBH.percentage:null, lBreakLPct: lBL?+lBL.percentage:null,
+    hFirstPct:hF?+hF.percentage:null, hFirstN:hF?.frequency||0,
+    lFirstPct:lF?+lF.percentage:null, lFirstN:lF?.frequency||0,
+    hBreakHPct:hBH?+hBH.percentage:null, hBreakLPct:hBL?+hBL.percentage:null,
+    lBreakHPct:lBH?+lBH.percentage:null, lBreakLPct:lBL?+lBL.percentage:null,
   };
 }
-function pGapFill(d) {
-  if (!d||d._err) return null;
-  const arr=Array.isArray(d.summary)?d.summary:[], f=cat=>arr.find(x=>x.category===cat)?.percentage??null;
-  return { upFill:f('gap up filled'), dnFill:f('gap down filled'), upFreq:f('gap up'), dnFreq:f('gap down') };
-}
-function pOpenStat(d) {
-  if (!d||d._err) return null;
-  const s=d.summary||{};
-  return { abovePDH:+(s.daysAbovePreviousHighPercentage??0).toFixed(1), inRange:+(s.daysOpeningBetweenHighLowPercentage??0).toFixed(1), belowPDL:+(s.daysBelowPreviousLowPercentage??0).toFixed(1), n:s.totalDays||0 };
-}
-function pPrevDay(d) {
-  if (!d||d._err) return null;
-  const s=d.summary||{};
-  return { pdhPct:s.prevDayHigh?.percentage??null, pdhN:s.prevDayHigh?.count??0, pdhGrn:s.prevDayHighGreen?.percentage??null, pdlPct:s.prevDayLow?.percentage??null, pdlN:s.prevDayLow?.count??0, pdlRed:s.prevDayLowRed?.percentage??null };
-}
-
 function pIBLevels(d) {
   if (!d||d._err) return null;
   const s=d.summary||{};
   const dt=key=>{ const t=s[key]; return t?{n:t.totalDays,lvl:t.levels||{}}:null; };
   return { breakout:dt('breakout days'), breakdown:dt('breakdown days') };
 }
+function pIBSize(d) {
+  if (!d||d._err) return null;
+  const s=d.summary||{};
+  const parse=bucket=>{ const b=s[bucket]; if(!b||!b.totalDays) return null; const n=b.totalDays; return { n, abovePct:+(b.priceBreakAboveCount/n*100).toFixed(1), belowPct:+(b.priceBreakBelowCount/n*100).toFixed(1) }; };
+  return { '0 - 0.2%':parse('0 - 0.2%'), '0.2 - 0.39%':parse('0.2 - 0.39%'), '0.4 - 0.59%':parse('0.4 - 0.59%'), '0.6 - 0.89%':parse('0.6 - 0.89%'), '> 0.9%':parse('> 0.9%') };
+}
+function pGapFill(d) {
+  if (!d||d._err) return null;
+  const arr=Array.isArray(d.summary)?d.summary:[], f=cat=>arr.find(x=>x.category===cat)?.percentage??null;
+  return { upFill:f('gap up filled'), dnFill:f('gap down filled'), upFreq:f('gap up'), dnFreq:f('gap down') };
+}
+function pPrevDay(d) {
+  if (!d||d._err) return null;
+  const s=d.summary||{};
+  return { pdhPct:s.prevDayHigh?.percentage??null, pdhN:s.prevDayHigh?.count??0, pdhGrn:s.prevDayHighGreen?.percentage??null, pdlPct:s.prevDayLow?.percentage??null, pdlN:s.prevDayLow?.count??0, pdlRed:s.prevDayLowRed?.percentage??null };
+}
 function pInsideBars(d) {
   if (!d||d._err) return null;
   const s=d.summary||{}, n=s.potentialInsideBarCount||0;
   if (!n) return null;
-  return {
-    n,
-    pdhPct: +(s.touchedPreviousDayHigh/n*100).toFixed(1),
-    pdlPct: +(s.touchedPreviousDayLow/n*100).toFixed(1),
-    bothPct: +(s.touchedPreviousDayHighAndLow/n*100).toFixed(1),
-    insidePct: +(s.stayedInsidePreviousDayHighAndLow/n*100).toFixed(1),
-  };
+  return { n, pdhPct:+(s.touchedPreviousDayHigh/n*100).toFixed(1), pdlPct:+(s.touchedPreviousDayLow/n*100).toFixed(1), bothPct:+(s.touchedPreviousDayHighAndLow/n*100).toFixed(1), insidePct:+(s.stayedInsidePreviousDayHighAndLow/n*100).toFixed(1) };
 }
 
-// ── Day slice helper ──────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────
 const DOW_MAP = {Mon:'Monday',Tue:'Tuesday',Wed:'Wednesday',Thu:'Thursday',Fri:'Friday'};
 function daySlice(d, day) {
   if (!d||d._err) return d;
@@ -337,19 +365,80 @@ function daySlice(d, day) {
   if (slice==null) return {_err:`no data for ${day}`};
   return {...d, summary:slice};
 }
+function ibSizeBucket(pct) {
+  if (pct==null) return null;
+  if (pct < 0.2) return '0 - 0.2%';
+  if (pct < 0.4) return '0.2 - 0.39%';
+  if (pct < 0.6) return '0.4 - 0.59%';
+  if (pct < 0.9) return '0.6 - 0.89%';
+  return '> 0.9%';
+}
+function calcTrade(sess) {
+  const t=S.trade[sess.id]||{};
+  const n=v=>(v!==null&&v!==undefined&&v!=='')? +v : null;
+  const iH=n(t.ibHigh), iL=n(t.ibLow), ent=n(t.entry), stp=n(t.stop), tgt=n(t.target), ctr=n(t.contracts)||1;
+  const ibSizePct=(iH&&iL&&iL>0)? +((iH-iL)/iL*100).toFixed(3) : null;
+  const ibMid=(iH&&iL)? +((iH+iL)/2).toFixed(2) : null;
+  const stopPts=(ent&&stp)? Math.abs(ent-stp) : null;
+  const dollarRisk=stopPts? +(stopPts*ctr*(sess.pv||1)).toFixed(0) : null;
+  const rewardPts=(ent&&tgt)? Math.abs(tgt-ent) : null;
+  const rr=(stopPts&&rewardPts&&stopPts>0)? +(rewardPts/stopPts).toFixed(2) : null;
+  const ibPts=(iH&&iL)? +(iH-iL).toFixed(2) : null;
+  return { ibSizePct, ibMid, stopPts, dollarRisk, rr, ibHigh:iH, ibLow:iL, ibPts };
+}
+function getVerdict(sess) {
+  const bias=S.bias[sess.id], ff=S.formedFirst[sess.id];
+  const tm=calcTrade(sess), rej=pIBRej((S.data[sess.id]||{}).ibRej);
+  const dow=dowName(), scheduled=sess.days.includes(dow);
+  if (!bias||bias==='neutral') return { verdict:'pending', blocks:[], warns:[], passes:[], hint:'select a direction to begin' };
+  const blocks=[], warns=[], passes=[];
+  if (!scheduled) blocks.push(`${sess.name} not scheduled on ${dow}`);
+  else passes.push(`${dow} is a scheduled day`);
+  if (!ff) {
+    blocks.push('set formed first — HIGH, LOW, or UNCLEAR');
+  } else if (ff==='unclear') {
+    blocks.push('formed first is UNCLEAR — wait before placing any order');
+  } else if (rej) {
+    if (bias==='long'&&ff==='high') {
+      blocks.push(`high formed first → only ${Math.round(rej.hBreakHPct||0)}% break IB high — edge is SHORT`);
+    } else if (bias==='short'&&ff==='low') {
+      blocks.push(`low formed first → only ${Math.round(rej.lBreakLPct||0)}% break IB low — edge is LONG`);
+    } else if (bias==='long'&&ff==='low') {
+      passes.push(`low formed first → ${Math.round(rej.lBreakHPct||0)}% break IB high`);
+    } else if (bias==='short'&&ff==='high') {
+      passes.push(`high formed first → ${Math.round(rej.hBreakLPct||0)}% break IB low`);
+    }
+  }
+  if (tm.dollarRisk!==null) {
+    if (tm.dollarRisk>300) blocks.push(`$${tm.dollarRisk} risk exceeds $300 cap — do not shrink stop to fit`);
+    else passes.push(`$${tm.dollarRisk} risk within $300 cap`);
+  }
+  if (tm.rr!==null) {
+    if (tm.rr<1.0) blocks.push(`R:R is ${tm.rr}R — target must be ≥ 1R`);
+    else if (tm.rr<1.5) warns.push(`R:R is ${tm.rr}R — marginal, consider widening target`);
+    else passes.push(`R:R ${tm.rr}R`);
+  }
+  if (tm.ibSizePct!==null&&tm.ibSizePct>1.0) warns.push(`IB ${tm.ibSizePct.toFixed(2)}% is oversized — be strict on entry confirmation`);
+  if (sess.id==='rty'&&tm.ibPts!==null&&tm.ibPts<25) blocks.push(`RTY IB is ${tm.ibPts.toFixed(0)}pts — minimum 25pts required`);
+  let verdict;
+  if (blocks.length>0) verdict='no';
+  else if (warns.length>0) verdict='caution';
+  else if (passes.length>=1) verdict='go';
+  else verdict='pending';
+  return { verdict, blocks, warns, passes };
+}
 
 // ── Colour helpers ────────────────────────────────────────
-function tColor(pct) { // 65% threshold rule
+function tColor(pct) {
   if (pct==null) return palette.textSecondary;
   if (pct>=65) return palette.bullish;
   if (pct>=50) return palette.warning;
   return palette.bearish;
 }
 const fmt = n => n==null ? '—' : `${Math.round(n)}%`;
-
 function sRow(label, pct, n, star, barColor) {
   const w=Math.min(100,Math.max(0,pct??0));
-  const vc=barColor||tColor(pct); // bar fill color = threshold color unless overridden
+  const vc=barColor||tColor(pct);
   return `<div class="sr">
     <span class="sr-lbl">${label}${star?'<span class="sr-star"> ★</span>':''}</span>
     <div class="sr-bar"><div class="sr-fil" style="width:${w}%;background:${vc}"></div></div>
@@ -374,7 +463,6 @@ function destroyCharts() {
   Object.values(charts).forEach(c=>{ try { c.destroy(); } catch {} });
   Object.keys(charts).forEach(k=>delete charts[k]);
 }
-
 function initCharts() {
   SESSIONS.forEach(sess=>{
     if (!sess.ib) return;
@@ -382,15 +470,82 @@ function initCharts() {
     if (!std) return;
     const canvas=document.getElementById(`chart-${sess.id}`);
     if (!canvas) return;
-    charts[sess.id]=new Chart(canvas,{
-      type:'doughnut',
-      data:{
-        labels:['single break','double break','no break'],
-        datasets:[{ data:[std.sN,std.bN,std.nN], backgroundColor:[seriesFill.primary,seriesFill.secondary,seriesFill.tertiary], borderColor:[series.primary,series.secondary,series.tertiary], borderWidth:1 }],
-      },
-      options:{ ...baseOptions, cutout:'62%', plugins:{ ...baseOptions.plugins, legend:{ position:'right', labels:{color:palette.textSecondary,font:{family:'Poppins',size:12},padding:10,boxWidth:10} } } },
-    });
+    charts[sess.id]=new Chart(canvas,{ type:'doughnut', data:{ labels:['single break','double break','no break'], datasets:[{ data:[std.sN,std.bN,std.nN], backgroundColor:[seriesFill.primary,seriesFill.secondary,seriesFill.tertiary], borderColor:[series.primary,series.secondary,series.tertiary], borderWidth:1 }] }, options:{ ...baseOptions, cutout:'62%', plugins:{ ...baseOptions.plugins, legend:{ position:'right', labels:{color:palette.textSecondary,font:{family:'Poppins',size:12},padding:10,boxWidth:10} } } } });
   });
+}
+
+// ── Dynamic trade panel helpers ───────────────────────────
+function renderMathContent(sess) {
+  const tm=calcTrade(sess);
+  if (!tm.ibSizePct&&!tm.dollarRisk&&!tm.rr) return '';
+  const riskColor=!tm.dollarRisk?palette.neutral:tm.dollarRisk>300?palette.bearish:tm.dollarRisk>200?palette.warning:palette.bullish;
+  const rrColor=!tm.rr?palette.neutral:tm.rr>=1.5?palette.bullish:tm.rr>=1.0?palette.warning:palette.bearish;
+  const szColor=!tm.ibSizePct?palette.neutral:tm.ibSizePct>1.0?palette.warning:palette.textSecondary;
+  return `<div class="math-strip">
+    <div class="math-cell"><div class="math-lbl">$ risk</div><div class="math-val" style="color:${riskColor}">${tm.dollarRisk!=null?'$'+tm.dollarRisk:'—'}</div></div>
+    <div class="math-cell"><div class="math-lbl">R:R</div><div class="math-val" style="color:${rrColor}">${tm.rr!=null?tm.rr+'R':'—'}</div></div>
+    <div class="math-cell"><div class="math-lbl">IB size</div><div class="math-val" style="color:${szColor}">${tm.ibSizePct!=null?tm.ibSizePct.toFixed(2)+'%':'—'}</div></div>
+    <div class="math-cell"><div class="math-lbl">midpoint</div><div class="math-val" style="color:${palette.textSecondary}">${tm.ibMid!=null?tm.ibMid.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'—'}</div></div>
+  </div>`;
+}
+function renderVerdictContent(sess) {
+  const v=getVerdict(sess);
+  const cls={go:'verdict-go',no:'verdict-no',caution:'verdict-caution',pending:'verdict-pending'};
+  const label={go:'go',no:'no trade',caution:'caution',pending:v.hint||'set direction to evaluate'};
+  const item=(text,type)=>`<div class="vr-item ${type}"><div class="vr-dot"></div><span>${text}</span></div>`;
+  let rows='';
+  v.blocks.forEach(r=>rows+=item(r,'vr-block'));
+  v.warns.forEach(r=>rows+=item(r,'vr-warn'));
+  if (v.verdict!=='no') v.passes.forEach(r=>rows+=item(r,'vr-pass'));
+  return `<div class="verdict ${cls[v.verdict]}">
+    <div class="verdict-label">${label[v.verdict]}</div>
+    ${rows?`<div class="vr-list">${rows}</div>`:''}
+  </div>`;
+}
+function renderOddsContent(sess) {
+  const d=S.data[sess.id]||{}, bias=S.bias[sess.id], ff=S.formedFirst[sess.id], DAY=DOW_MAP[dowName()];
+  const wkd=pIBWkd(d.ibWkd), wkdDay=wkd&&DAY?wkd[DAY]:null;
+  const rej=pIBRej(d.ibRej);
+  let ffPct=null, ffSub='set direction + formed first';
+  if (rej&&ff&&ff!=='unclear'&&bias) {
+    if (bias==='long'&&ff==='low')  { ffPct=rej.lBreakHPct; ffSub='low first → H break'; }
+    if (bias==='long'&&ff==='high') { ffPct=rej.hBreakHPct; ffSub='high first → H break'; }
+    if (bias==='short'&&ff==='high'){ ffPct=rej.hBreakLPct; ffSub='high first → L break'; }
+    if (bias==='short'&&ff==='low') { ffPct=rej.lBreakLPct; ffSub='low first → L break'; }
+  }
+  const tm=calcTrade(sess), ibSzData=d.ibSize?pIBSize(d.ibSize):null;
+  let bucketPct=null, bucketSub='enter IB H + IB L';
+  if (ibSzData&&tm.ibSizePct!==null) {
+    const bk=ibSizeBucket(tm.ibSizePct), bd=ibSzData[bk];
+    if (bd) { bucketPct=bias==='short'?bd.belowPct:bd.abovePct; bucketSub=bk+` · n=${bd.n}`; }
+  }
+  const lev=pIBLevels(d.ibLevels);
+  let bestPct=null, bestSub='—';
+  if (lev) {
+    const dt=bias==='short'?lev.breakdown:lev.breakout;
+    if (dt) {
+      const keys=bias==='short'?['-0.5','-1.0','-1.5','-2.0']:['0.5','1.0','1.5','2.0'];
+      let last=null;
+      keys.forEach(k=>{ const v=dt.lvl[k]; if(v&&v.percentage>=50) last={pct:v.percentage,k}; });
+      if (last) { bestPct=last.pct; bestSub=`${Math.abs(+last.k)}× IB extension`; }
+    }
+  }
+  const cell=(lbl,pct,sub)=>`<div class="odds-cell"><div class="odds-lbl">${lbl}</div><div class="odds-val" style="color:${tColor(pct)}">${pct!=null?Math.round(pct)+'%':'—'}</div><div class="odds-sub">${sub}</div></div>`;
+  return `<div class="odds-grid">
+    ${cell('weekday break', wkdDay?wkdDay.sPct:null, wkdDay?`${DAY} · n=${wkdDay.n}`:'loading…')}
+    ${cell('formed first', ffPct, ffSub)}
+    ${cell('IB bucket', bucketPct, bucketSub)}
+    ${cell('best target', bestPct, bestSub)}
+  </div>`;
+}
+function updateTradeUI(sessId) {
+  const sess=SESSIONS.find(s=>s.id===sessId); if(!sess) return;
+  const mw=document.getElementById(`math-wrap-${sessId}`);
+  const vw=document.getElementById(`verdict-wrap-${sessId}`);
+  const ow=document.getElementById(`odds-wrap-${sessId}`);
+  if(mw) mw.innerHTML=renderMathContent(sess);
+  if(vw) vw.innerHTML=renderVerdictContent(sess);
+  if(ow) ow.innerHTML=renderOddsContent(sess);
 }
 
 // ── Mode bar ──────────────────────────────────────────────
@@ -408,16 +563,65 @@ setInterval(renderModeBar,60000);
 function renderCards() {
   renderModeBar();
   document.getElementById('cards').innerHTML=SESSIONS.map(renderCard).join('');
-  document.querySelectorAll('[data-bs]').forEach(btn=>btn.addEventListener('click',()=>{ const{bs:id,bv:v}=btn.dataset; S.bias[id]=S.bias[id]===v?null:v; destroyCharts(); renderCards(); initCharts(); }));
-  document.querySelectorAll('[data-cs]').forEach(btn=>btn.addEventListener('click',()=>{ const{cs:id,cv:v}=btn.dataset; S.ibColor[id]=S.ibColor[id]===v?null:v; destroyCharts(); renderCards(); initCharts(); }));
+  // Bias buttons
+  document.querySelectorAll('[data-bs]').forEach(btn=>btn.addEventListener('click',()=>{
+    const{bs:id,bv:v}=btn.dataset; S.bias[id]=S.bias[id]===v?null:v;
+    destroyCharts(); renderCards(); initCharts();
+  }));
+  // IB color picker
+  document.querySelectorAll('[data-cs]').forEach(btn=>btn.addEventListener('click',()=>{
+    const{cs:id,cv:v}=btn.dataset; S.ibColor[id]=S.ibColor[id]===v?null:v;
+    destroyCharts(); renderCards(); initCharts();
+  }));
+  // Trade inputs — update without full re-render to preserve focus
+  document.querySelectorAll('[data-ti]').forEach(inp=>{
+    inp.addEventListener('input',()=>{
+      const{ti:id,tf:field}=inp.dataset;
+      if(!S.trade[id]) S.trade[id]={};
+      S.trade[id][field]=inp.value===''?null:+inp.value;
+      updateTradeUI(id);
+    });
+  });
+  // Formed first toggle
+  document.querySelectorAll('[data-ffs]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const{ffs:id,ffv:v}=btn.dataset;
+      S.formedFirst[id]=S.formedFirst[id]===v?null:v;
+      document.querySelectorAll(`[data-ffs="${id}"]`).forEach(b=>{
+        const sel=S.formedFirst[id]===b.dataset.ffv;
+        b.className='ff-btn'+(sel?(b.dataset.ffv==='high'?' ff-high':b.dataset.ffv==='low'?' ff-low':' ff-unclear'):'');
+      });
+      updateTradeUI(id);
+    });
+  });
 }
 
 function renderCard(sess) {
   const dow=dowName(), sched=sess.days.includes(dow), bias=S.bias[sess.id]||null, post=isPost();
   const d=S.data[sess.id]||{}, cfls=getConflicts(sess.id,bias);
   const price=S.prices[sess.ticker], priceStr=price!=null?price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'';
-  const dr=metaDateRange();
   const edgefulBase=`https://edgeful.com/reports/${sess.mt}/${sess.ticker}`;
+  const t=S.trade[sess.id]||{}, ff=S.formedFirst[sess.id]||null;
+
+  const tradePanel = sess.ib ? `<div class="trade-panel">
+  <div class="trade-grid">
+    <div class="trade-field"><span class="trade-lbl">IB high</span><input class="trade-inp" type="number" placeholder="—" data-ti="${sess.id}" data-tf="ibHigh" value="${t.ibHigh??''}"></div>
+    <div class="trade-field"><span class="trade-lbl">IB low</span><input class="trade-inp" type="number" placeholder="—" data-ti="${sess.id}" data-tf="ibLow" value="${t.ibLow??''}"></div>
+    <div class="trade-field"><span class="trade-lbl">price</span><input class="trade-inp" type="number" placeholder="—" data-ti="${sess.id}" data-tf="price" value="${t.price??''}"></div>
+  </div>
+  <div class="trade-grid-4">
+    <div class="trade-field"><span class="trade-lbl">entry</span><input class="trade-inp" type="number" placeholder="—" data-ti="${sess.id}" data-tf="entry" value="${t.entry??''}"></div>
+    <div class="trade-field"><span class="trade-lbl">stop</span><input class="trade-inp" type="number" placeholder="—" data-ti="${sess.id}" data-tf="stop" value="${t.stop??''}"></div>
+    <div class="trade-field"><span class="trade-lbl">target</span><input class="trade-inp" type="number" placeholder="—" data-ti="${sess.id}" data-tf="target" value="${t.target??''}"></div>
+    <div class="trade-field"><span class="trade-lbl">cts</span><input class="trade-inp" type="number" placeholder="1" data-ti="${sess.id}" data-tf="contracts" value="${t.contracts??''}"></div>
+  </div>
+  <div class="ff-row">
+    <span class="ff-lbl">formed:</span>
+    <button class="ff-btn${ff==='high'   ?' ff-high':''}"    data-ffs="${sess.id}" data-ffv="high">▲ high</button>
+    <button class="ff-btn${ff==='low'    ?' ff-low':''}"     data-ffs="${sess.id}" data-ffv="low">▼ low</button>
+    <button class="ff-btn${ff==='unclear'?' ff-unclear':''}" data-ffs="${sess.id}" data-ffv="unclear">? unclear</button>
+  </div>
+</div>` : '';
 
   return `<div class="card${cfls.length?' has-conflict':''}">
 
@@ -431,15 +635,6 @@ function renderCard(sess) {
     <span>IB${sess.ep}${sess.note?` (${sess.note})`:''} · ${sess.win} · ${sess.size}</span>
     ${!sched?'<span class="badge-oos">not in schedule today</span>':''}
   </div>
-  <p class="meta-line mt-2">
-    <span>${sess.ticker} initial balance</span>
-    <span class="meta-sep">|</span>
-    <span>${dr}</span>
-    <span class="meta-sep">|</span>
-    <span>9:30 am - 4:00 pm (UTC-4)</span>
-    <span class="meta-sep">|</span>
-    <a class="meta-link" href="https://edgeful.com" target="_blank" rel="noopener">edgeful.com</a>
-  </p>
 </div>
 
 <div class="bias-row">
@@ -448,62 +643,47 @@ function renderCard(sess) {
   <button class="bias-btn${bias==='short'  ?' sel-short':''}"   data-bs="${sess.id}" data-bv="short">▼ short</button>
 </div>
 
+${tradePanel}
+
+<div id="math-wrap-${sess.id}">${sess.ib?renderMathContent(sess):''}</div>
+
+<div class="verdict-wrap" id="verdict-wrap-${sess.id}">${sess.ib?renderVerdictContent(sess):''}</div>
+
+<div class="odds-wrap" id="odds-wrap-${sess.id}">${sess.ib?renderOddsContent(sess):''}</div>
+
 ${cfls.length?`<div class="conflict-box"><strong>⚠ conflict</strong>${cfls.map(c=>`• ${c}`).join('<br>')}</div>`:''}
 ${sess.ib?renderIBSection(sess,d,post,edgefulBase):''}
 ${renderCtxSection(sess,d,edgefulBase)}
 </div>`;
 }
 
-// ── IB Breakout section ───────────────────────────────────
+// ── IB section ────────────────────────────────────────────
 function renderIBSection(sess,d,post,edgefulBase) {
   const dow=dowName(), DAY=DOW_MAP[dow];
   const std=pIBStd(d.ibStd), wkd=pIBWkd(d.ibWkd), cont=pIBCont(daySlice(d.ibCont,DAY)), rej=pIBRej(d.ibRej), lev=pIBLevels(d.ibLevels);
   let h='';
 
   // IB Breakout
-  h+=`<div class="subsection-header">
-  <div style="display:flex;align-items:baseline;justify-content:space-between">
-    <h3 class="text-sm font-medium lowercase" style="color:#FFFFFF">ib breakout</h3>
-    <span class="source-label">from: <a href="${edgefulBase}/initial-balance-breakout/standard" target="_blank" rel="noopener">initial balance breakout standard</a></span>
-  </div>
-</div>
+  h+=`<div class="subsection-header"><div style="display:flex;align-items:baseline;justify-content:space-between"><h3 class="text-sm font-medium lowercase" style="color:#FFFFFF">ib breakout</h3><span class="source-label">from: <a href="${edgefulBase}/initial-balance-breakout/standard" target="_blank" rel="noopener">initial balance standard</a></span></div></div>
 <div class="sec-body">`;
-
-  if (d.ibStd&&d.ibStd._err) {
-    h+=`<div class="err-msg">${d.ibStd._err}</div>`;
-  } else if (std) {
-    h+=`<div style="display:grid;grid-template-columns:1fr 160px;gap:12px;align-items:start">
-      <div>
-        ${sRow('single break',std.sPct,`n=${std.sN}`)}
-        ${sRow('double break',std.bPct,`n=${std.bN}`)}
-        ${sRow('no break',std.nPct,`n=${std.nN}`)}
-        <div style="font-size:11px;color:#555555;margin-top:4px">${std.total} sessions</div>
-      </div>
-      <div style="height:130px"><canvas id="chart-${sess.id}"></canvas></div>
-    </div>`;
-
+  if (d.ibStd&&d.ibStd._err) { h+=`<div class="err-msg">${d.ibStd._err}</div>`; }
+  else if (std) {
+    h+=`<div style="display:grid;grid-template-columns:1fr 160px;gap:12px;align-items:start"><div>
+      ${sRow('single break',std.sPct,`n=${std.sN}`)}
+      ${sRow('double break',std.bPct,`n=${std.bN}`)}
+      ${sRow('no break',std.nPct,`n=${std.nN}`)}
+      <div style="font-size:11px;color:#555555;margin-top:4px">${std.total} sessions</div>
+    </div><div style="height:130px"><canvas id="chart-${sess.id}"></canvas></div></div>`;
     if (wkd&&DAY&&wkd[DAY]) {
       const w=wkd[DAY];
-      h+=`<div class="dow-strip">
-        <div class="dow-title">${dow} — n=${w.n}</div>
-        ${sRow('single break',w.sPct)}
-        ${sRow('double break',w.bPct)}
-        ${sRow('no break',w.nPct)}
-      </div>`;
+      h+=`<div class="dow-strip"><div class="dow-title">${dow} — n=${w.n}</div>${sRow('single break',w.sPct)}${sRow('double break',w.bPct)}${sRow('no break',w.nPct)}</div>`;
     }
   } else { h+=`<div class="load-msg">loading…</div>`; }
-
   h+=`</div>`;
 
-  // Direction Trigger (by-rejection)
-  h+=`<div class="subsection-header">
-  <div style="display:flex;align-items:baseline;justify-content:space-between">
-    <h3 class="text-sm font-medium lowercase" style="color:#FFFFFF">direction trigger</h3>
-    <span class="source-label">from: <a href="${edgefulBase}/initial-balance-breakout/by-rejection" target="_blank" rel="noopener">initial balance by rejection</a></span>
-  </div>
-</div>
+  // Direction Trigger (by rejection)
+  h+=`<div class="subsection-header"><div style="display:flex;align-items:baseline;justify-content:space-between"><h3 class="text-sm font-medium lowercase" style="color:#FFFFFF">direction trigger</h3><span class="source-label">from: <a href="${edgefulBase}/initial-balance-breakout/by-rejection" target="_blank" rel="noopener">initial balance by rejection</a></span></div></div>
 <div class="sec-body">`;
-
   if (d.ibRej&&d.ibRej._err) { h+=`<div class="err-msg">${d.ibRej._err}</div>`; }
   else if (rej) {
     h+=`<div style="font-size:11px;color:#555555;margin-bottom:6px">which side forms first</div>`;
@@ -517,53 +697,36 @@ function renderIBSection(sess,d,post,edgefulBase) {
     h+=`<div class="indent">${sRow('→ ib high breaks',rej.lBreakHPct,null,true)}</div>`;
     h+=`<div class="indent">${sRow('→ ib low breaks',rej.lBreakLPct)}</div>`;
   } else { h+=`<div class="load-msg">loading…</div>`; }
-
   h+=`</div>`;
 
   // Breakout levels
-  h+=`<div class="subsection-header">
-  <div style="display:flex;align-items:baseline;justify-content:space-between">
-    <h3 class="text-sm font-medium lowercase" style="color:#FFFFFF">breakout levels</h3>
-    <span class="source-label">from: <a href="${edgefulBase}/initial-balance-breakout/by-levels" target="_blank" rel="noopener">initial balance by levels</a></span>
-  </div>
-</div>
+  h+=`<div class="subsection-header"><div style="display:flex;align-items:baseline;justify-content:space-between"><h3 class="text-sm font-medium lowercase" style="color:#FFFFFF">breakout levels</h3><span class="source-label">from: <a href="${edgefulBase}/initial-balance-breakout/by-levels" target="_blank" rel="noopener">initial balance by levels</a></span></div></div>
 <div class="sec-body">`;
-
   if (d.ibLevels&&d.ibLevels._err) { h+=`<div class="err-msg">${d.ibLevels._err}</div>`; }
   else if (lev) {
-    const LEVELS_UP   = ['0.5','1.0','1.5','2.0','2.5'];
-    const LEVELS_DOWN = ['-0.5','-1.0','-1.5','-2.0','-2.5'];
+    const UP=['.5','1.0','1.5','2.0','2.5'], DN=['-0.5','-1.0','-1.5','-2.0','-2.5'];
     if (lev.breakout) {
       h+=`<div style="font-size:11px;color:#555555;margin-bottom:6px">breakout extension — n=${lev.breakout.n}</div>`;
-      LEVELS_UP.forEach(k=>{ const v=lev.breakout.lvl[k]; if(v&&v.percentage>0) h+=sRow(`${k}× IB`,v.percentage,null,false,palette.primary); });
+      ['0.5','1.0','1.5','2.0','2.5'].forEach(k=>{ const v=lev.breakout.lvl[k]; if(v&&v.percentage>0) h+=sRow(`${k}× IB`,v.percentage,null,false,palette.primary); });
     }
     if (lev.breakdown) {
       h+=`<div style="font-size:11px;color:#555555;margin:8px 0 6px">breakdown extension — n=${lev.breakdown.n}</div>`;
-      LEVELS_DOWN.forEach(k=>{ const v=lev.breakdown.lvl[k]; if(v&&v.percentage>0) h+=sRow(`${Math.abs(+k)}× IB`,v.percentage,null,false,palette.bearish); });
+      ['-0.5','-1.0','-1.5','-2.0','-2.5'].forEach(k=>{ const v=lev.breakdown.lvl[k]; if(v&&v.percentage>0) h+=sRow(`${Math.abs(+k)}× IB`,v.percentage,null,false,palette.bearish); });
     }
   } else { h+=`<div class="load-msg">loading…</div>`; }
-
   h+=`</div>`;
 
-  // Candle continuation (always visible)
+  // Candle continuation
   const ibCol=S.ibColor[sess.id]||null;
-  h+=`<div class="subsection-header">
-  <div style="display:flex;align-items:baseline;justify-content:space-between">
-    <h3 class="text-sm font-medium lowercase" style="color:#FFFFFF">candle continuation</h3>
-    <span class="source-label">from: <a href="${edgefulBase}/opening-candle-continuation/by-weekday" target="_blank" rel="noopener">opening candle continuation by weekday</a></span>
-  </div>
-</div>
-<div class="sec-body">
-  <div class="ib-pick-row">
-    <span class="ib-pick-lbl">ib closed:</span>
-    <button class="ib-pick-btn${ibCol==='green'?' ib-green':''}" data-cs="${sess.id}" data-cv="green">● green</button>
-    <button class="ib-pick-btn${ibCol==='red'  ?' ib-red':''}"   data-cs="${sess.id}" data-cv="red">● red</button>
-  </div>`;
-
+  h+=`<div class="subsection-header"><div style="display:flex;align-items:baseline;justify-content:space-between"><h3 class="text-sm font-medium lowercase" style="color:#FFFFFF">candle continuation</h3><span class="source-label">from: <a href="${edgefulBase}/opening-candle-continuation/by-weekday" target="_blank" rel="noopener">opening candle continuation by weekday</a></span></div></div>
+<div class="sec-body"><div class="ib-pick-row"><span class="ib-pick-lbl">ib closed:</span>
+  <button class="ib-pick-btn${ibCol==='green'?' ib-green':''}" data-cs="${sess.id}" data-cv="green">● green</button>
+  <button class="ib-pick-btn${ibCol==='red'  ?' ib-red':''}"   data-cs="${sess.id}" data-cv="red">● red</button>
+</div>`;
   if (d.ibCont&&d.ibCont._err) { h+=`<div class="err-msg">${d.ibCont._err}</div>`; }
   else if (cont) {
-    if (ibCol==='green')     h+=sRow('green day continuation',cont.gGreen);
-    else if (ibCol==='red')  h+=sRow('red day continuation',cont.rRed);
+    if (ibCol==='green')    h+=sRow('green day continuation',cont.gGreen);
+    else if (ibCol==='red') h+=sRow('red day continuation',cont.rRed);
     else { h+=sRow('green ib → green day',cont.gGreen); h+=sRow('red ib → red day',cont.rRed); }
   } else { h+=`<div class="load-msg">loading…</div>`; }
   h+=`</div>`;
@@ -577,40 +740,24 @@ function renderCtxSection(sess,d,edgefulBase) {
   const pdr=pPrevDay(daySlice(d.prevDayRange,DAY)), gf=pGapFill(daySlice(d.gapFill,DAY)), ib=pInsideBars(daySlice(d.insideBars,DAY));
   const anyLoading=!d.prevDayRange&&!d.gapFill&&!d.insideBars;
   const dr=metaDateRange();
-
-  let h=`<div class="subsection-header">
-  <div style="display:flex;align-items:baseline;justify-content:space-between">
-    <h3 class="text-sm font-medium lowercase" style="color:#FFFFFF">direction &amp; context</h3>
-    <span class="source-label">from: <a href="${edgefulBase}/previous-days-range/by-weekday" target="_blank" rel="noopener">previous days range</a>, <a href="${edgefulBase}/gap-fill/by-weekday" target="_blank" rel="noopener">gap fill</a>, <a href="${edgefulBase}/inside-bars/by-weekday" target="_blank" rel="noopener">inside bars</a></span>
-  </div>
-  <p class="meta-line" style="margin-top:3px">
-    <span>${sess.ticker} direction · ${DAY||'all days'}</span>
-    <span class="meta-sep">|</span>
-    <span>${dr}</span>
-    <span class="meta-sep">|</span>
-    <a class="meta-link" href="https://edgeful.com" target="_blank" rel="noopener">edgeful.com</a>
-  </p>
-</div>
-<div class="sec-body">`;
-
-  if (anyLoading) {
-    h+=`<div class="load-msg">loading…</div>`;
-  } else {
+  let h=`<div class="subsection-header"><div style="display:flex;align-items:baseline;justify-content:space-between"><h3 class="text-sm font-medium lowercase" style="color:#FFFFFF">direction &amp; context</h3><span class="source-label">from: <a href="${edgefulBase}/previous-days-range/by-weekday" target="_blank" rel="noopener">prev days range</a>, <a href="${edgefulBase}/gap-fill/by-weekday" target="_blank" rel="noopener">gap fill</a>, <a href="${edgefulBase}/inside-bars/by-weekday" target="_blank" rel="noopener">inside bars</a></span></div>
+  <p class="meta-line" style="margin-top:3px"><span>${sess.ticker} · ${DAY||'all days'}</span><span class="meta-sep">|</span><span>${dr}</span><span class="meta-sep">|</span><a class="meta-link" href="https://edgeful.com" target="_blank" rel="noopener">edgeful.com</a></p>
+</div><div class="sec-body">`;
+  if (anyLoading) { h+=`<div class="load-msg">loading…</div>`; }
+  else {
     if (d.prevDayRange&&d.prevDayRange._err) { h+=`<div class="err-msg">${d.prevDayRange._err}</div>`; }
     else if (pdr) {
       h+=sRow('PDH break rate',pdr.pdhPct,`n=${pdr.pdhN}`);
-      if (pdr.pdhGrn!=null) h+=`<div class="indent">${sRow('↳ closes green (follow-through)',pdr.pdhGrn)}</div>`;
+      if (pdr.pdhGrn!=null) h+=`<div class="indent">${sRow('↳ closes green',pdr.pdhGrn)}</div>`;
       h+=sRow('PDL break rate',pdr.pdlPct,`n=${pdr.pdlN}`);
-      if (pdr.pdlRed!=null) h+=`<div class="indent">${sRow('↳ closes red (follow-through)',pdr.pdlRed)}</div>`;
+      if (pdr.pdlRed!=null) h+=`<div class="indent">${sRow('↳ closes red',pdr.pdlRed)}</div>`;
       h+=`<div class="mini-div"></div>`;
     }
-
     if (d.gapFill&&d.gapFill._err) { h+=`<div class="err-msg">${d.gapFill._err}</div>`; }
     else if (gf) {
       h+=sRow('gap-up fill rate',gf.upFill,`${Math.round(gf.upFreq??0)}% of days`);
       h+=sRow('gap-down fill rate',gf.dnFill,`${Math.round(gf.dnFreq??0)}% of days`);
     }
-
     if (d.insideBars&&d.insideBars._err) { h+=`<div class="err-msg">${d.insideBars._err}</div>`; }
     else if (ib) {
       h+=`<div class="mini-div"></div>`;
@@ -621,7 +768,6 @@ function renderCtxSection(sess,d,edgefulBase) {
       h+=sRow('stayed inside',ib.insidePct);
     }
   }
-
   h+=`</div>`;
   return h;
 }
@@ -636,12 +782,11 @@ document.getElementById('mode-ovr').addEventListener('click',()=>{ S.override=S.
 
 // ── Connect ───────────────────────────────────────────────
 async function connect() {
-  const key=document.getElementById('key-in').value.trim();
-  if (!key) return;
+  const key=document.getElementById('key-in').value.trim(); if(!key) return;
   const errEl=document.getElementById('setup-err'), btn=document.getElementById('conn-btn');
   errEl.textContent=''; btn.textContent='connecting…'; btn.disabled=true; S.key=key;
   try {
-    await apiFetch('/report_calculation/previous-days-range-standard/futures/RTY',{start_date:'2026-03-01',end_date:'2026-06-10',start_time:'09:30:00',end_time:'16:00:00',timezone:'America/New_York'});
+    await apiFetch('/report_calculation/previous-days-range-standard/futures/RTY',{start_date:'2026-03-01',end_date:'2026-06-11',start_time:'09:30:00',end_time:'16:00:00',timezone:'America/New_York'});
     sessionStorage.setItem('ef_key',key);
     document.getElementById('setup').hidden=true;
     document.getElementById('dashboard').hidden=false;
