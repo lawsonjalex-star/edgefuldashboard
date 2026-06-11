@@ -118,12 +118,7 @@ footer { margin-top: 40px; padding: 20px 14px; border-top: 1px solid #2A2A2A; ma
   footer { max-width: 1120px; }
 }
 
-/* Rule 1 trigger box */
-.rule1-box { margin-top: 12px; padding: 10px 12px; background: rgba(34,197,94,0.06); border: 1px solid rgba(34,197,94,0.25); border-radius: 8px; }
-.rule1-title { font-size: 10px; font-weight: 500; color: #22C55E; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
-.rule1-row { display: flex; align-items: baseline; gap: 6px; margin-bottom: 3px; font-size: 12px; color: #C7C7C7; }
-.rule1-big { font-size: 15px; font-weight: 500; color: #22C55E; font-variant-numeric: tabular-nums; }
-.rule1-dim { font-size: 11px; color: #555555; }
+
 </style>
 </head>
 <body>
@@ -239,15 +234,14 @@ async function loadSession(sess,start_date,end_date) {
   const ib={...dr,...IB_EXTRA,start_time:'09:30:00',end_time:'16:00:00',timezone:'America/New_York'};
   const p=(prefix,slug)=>`/${prefix}/${slug}/${sess.mt}/${sess.ticker}`;
   const jobs={
-    openingStats: safe(p('report_calculation','opening-stats-standard'),ctx),
-    prevDayRange: safe(p('report_calculation','previous-days-range-standard'),ctx),
-    gapFill:      safe(p('report_calculation','gap-fill-standard'),ctx),
+    prevDayRange: safe(p('report_calculation','previous-days-range-by-weekday'),ctx),
+    gapFill:      safe(p('report_calculation','gap-fill-by-weekday'),ctx),
+    insideBars:   safe(p('report_calculation','inside-bars-by-weekday'),ctx),
   };
   if (sess.ib) {
     jobs.ibStd  = safe(p('intraday_calculation','initial-balance-breakout-standard'),ib);
     jobs.ibWkd  = safe(p('intraday_calculation','initial-balance-breakout-by-weekday'),ib);
-    jobs.ibRet  = safe(p('intraday_calculation','initial-balance-breakout-by-retracement'),ib);
-    jobs.ibCont = safe(p('intraday_calculation','opening-candle-continuation-standard'),ib);
+    jobs.ibCont = safe(p('intraday_calculation','opening-candle-continuation-by-weekday'),ib);
     jobs.ibRej  = safe(p('intraday_calculation','initial-balance-breakout-by-rejection'),ib);
   }
   const keys=Object.keys(jobs), vals=await Promise.all(Object.values(jobs));
@@ -315,6 +309,28 @@ function pPrevDay(d) {
   return { pdhPct:s.prevDayHigh?.percentage??null, pdhN:s.prevDayHigh?.count??0, pdhGrn:s.prevDayHighGreen?.percentage??null, pdlPct:s.prevDayLow?.percentage??null, pdlN:s.prevDayLow?.count??0, pdlRed:s.prevDayLowRed?.percentage??null };
 }
 
+function pInsideBars(d) {
+  if (!d||d._err) return null;
+  const s=d.summary||{}, n=s.potentialInsideBarCount||0;
+  if (!n) return null;
+  return {
+    n,
+    pdhPct: +(s.touchedPreviousDayHigh/n*100).toFixed(1),
+    pdlPct: +(s.touchedPreviousDayLow/n*100).toFixed(1),
+    bothPct: +(s.touchedPreviousDayHighAndLow/n*100).toFixed(1),
+    insidePct: +(s.stayedInsidePreviousDayHighAndLow/n*100).toFixed(1),
+  };
+}
+
+// ── Day slice helper ──────────────────────────────────────
+const DOW_MAP = {Mon:'Monday',Tue:'Tuesday',Wed:'Wednesday',Thu:'Thursday',Fri:'Friday'};
+function daySlice(d, day) {
+  if (!d||d._err) return d;
+  const slice=(d.summary||{})[day];
+  if (slice==null) return {_err:`no data for ${day}`};
+  return {...d, summary:slice};
+}
+
 // ── Colour helpers ────────────────────────────────────────
 function tColor(pct) { // 65% threshold rule
   if (pct==null) return palette.textSecondary;
@@ -338,7 +354,7 @@ function sRow(label, pct, n, star, barColor) {
 // ── Conflicts ─────────────────────────────────────────────
 function getConflicts(id, bias) {
   if (!bias||bias==='neutral') return [];
-  const gf=pGapFill((S.data[id]||{}).gapFill);
+  const gf=pGapFill(daySlice((S.data[id]||{}).gapFill, DOW_MAP[dowName()]));
   if (!gf) return [];
   const out=[];
   if (bias==='long'&&(gf.upFill??0)>=65)  out.push(`gap-up fill ${Math.round(gf.upFill)}% — likely fills downward`);
@@ -433,8 +449,8 @@ ${renderCtxSection(sess,d,edgefulBase)}
 
 // ── IB Breakout section ───────────────────────────────────
 function renderIBSection(sess,d,post,edgefulBase) {
-  const std=pIBStd(d.ibStd), wkd=pIBWkd(d.ibWkd), ret=pIBRet(d.ibRet), cont=pIBCont(d.ibCont), rej=pIBRej(d.ibRej);
-  const dow=dowName(), DAY={Mon:'Monday',Tue:'Tuesday',Wed:'Wednesday',Thu:'Thursday',Fri:'Friday'}[dow];
+  const dow=dowName(), DAY=DOW_MAP[dow];
+  const std=pIBStd(d.ibStd), wkd=pIBWkd(d.ibWkd), cont=pIBCont(daySlice(d.ibCont,DAY)), rej=pIBRej(d.ibRej);
   let h='';
 
   // IB Breakout
@@ -472,29 +488,6 @@ function renderIBSection(sess,d,post,edgefulBase) {
 
   h+=`</div>`;
 
-  // Entry retracement
-  h+=`<div class="subsection-header">
-  <div style="display:flex;align-items:baseline;justify-content:space-between">
-    <h3 class="text-sm font-medium lowercase" style="color:#FFFFFF">entry retracement</h3>
-    <span class="source-label">from: <a href="${edgefulBase}/initial-balance-breakout/by-retracement" target="_blank" rel="noopener">initial balance breakout by retracement</a></span>
-  </div>
-</div>
-<div class="sec-body">`;
-
-  if (d.ibRet&&d.ibRet._err) { h+=`<div class="err-msg">${d.ibRet._err}</div>`; }
-  else if (ret) {
-    h+=`<div style="font-size:11px;color:#555555;margin-bottom:6px">after breakout — n=${ret.nOut}</div>`;
-    h+=sRow('25% retrace',ret.outL1,'',sess.ep===25);
-    h+=sRow('50% retrace',ret.outL2,'',sess.ep===50);
-    h+=sRow('75% retrace',ret.outL3);
-    h+=`<div style="font-size:11px;color:#555555;margin:8px 0 6px">after breakdown — n=${ret.nDn}</div>`;
-    h+=sRow('25% retrace',ret.dnL1,'',sess.ep===25);
-    h+=sRow('50% retrace',ret.dnL2,'',sess.ep===50);
-    h+=sRow('75% retrace',ret.dnL3);
-  } else { h+=`<div class="load-msg">loading…</div>`; }
-
-  h+=`</div>`;
-
   // Direction Trigger (by-rejection)
   h+=`<div class="subsection-header">
   <div style="display:flex;align-items:baseline;justify-content:space-between">
@@ -516,22 +509,16 @@ function renderIBSection(sess,d,post,edgefulBase) {
     h+=`<div style="font-size:11px;color:#555555;margin-top:8px;margin-bottom:5px">when IB LOW forms first (n=${rej.lFirstN})</div>`;
     h+=`<div class="indent">${sRow('→ ib high breaks',rej.lBreakHPct,null,true)}</div>`;
     h+=`<div class="indent">${sRow('→ ib low breaks',rej.lBreakLPct)}</div>`;
-    h+=`<div class="rule1-box">
-      <div class="rule1-title">rule 1 — 10:30 direction trigger</div>
-      <div class="rule1-row">ib low forms first → <span class="rule1-big">${rej.lBreakHPct!=null?Math.round(rej.lBreakHPct)+'%':'—'}</span> break ib high <span class="rule1-dim">n=${rej.lFirstN}</span></div>
-      <div class="rule1-row" style="margin-top:4px">+ ib closes top 25% of range → <span class="rule1-big">97.4%</span> <span class="rule1-dim">n=38 · your data</span></div>
-    </div>`;
   } else { h+=`<div class="load-msg">loading…</div>`; }
 
   h+=`</div>`;
 
-  // Post-IB continuation
-  if (post) {
-    const ibCol=S.ibColor[sess.id]||null;
-    h+=`<div class="subsection-header">
+  // Candle continuation (always visible)
+  const ibCol=S.ibColor[sess.id]||null;
+  h+=`<div class="subsection-header">
   <div style="display:flex;align-items:baseline;justify-content:space-between">
-    <h3 class="text-sm font-medium lowercase" style="color:#FFFFFF">ib candle continuation</h3>
-    <span class="source-label">from: <a href="${edgefulBase}/opening-candle-continuation/standard" target="_blank" rel="noopener">opening candle continuation standard</a></span>
+    <h3 class="text-sm font-medium lowercase" style="color:#FFFFFF">candle continuation</h3>
+    <span class="source-label">from: <a href="${edgefulBase}/opening-candle-continuation/by-weekday" target="_blank" rel="noopener">opening candle continuation by weekday</a></span>
   </div>
 </div>
 <div class="sec-body">
@@ -541,31 +528,31 @@ function renderIBSection(sess,d,post,edgefulBase) {
     <button class="ib-pick-btn${ibCol==='red'  ?' ib-red':''}"   data-cs="${sess.id}" data-cv="red">● red</button>
   </div>`;
 
-    if (d.ibCont&&d.ibCont._err) { h+=`<div class="err-msg">${d.ibCont._err}</div>`; }
-    else if (cont) {
-      if (ibCol==='green')     h+=sRow('green day continuation',cont.gGreen);
-      else if (ibCol==='red')  h+=sRow('red day continuation',cont.rRed);
-      else { h+=sRow('green ib → green day',cont.gGreen); h+=sRow('red ib → red day',cont.rRed); }
-    } else { h+=`<div class="load-msg">loading…</div>`; }
-    h+=`</div>`;
-  }
+  if (d.ibCont&&d.ibCont._err) { h+=`<div class="err-msg">${d.ibCont._err}</div>`; }
+  else if (cont) {
+    if (ibCol==='green')     h+=sRow('green day continuation',cont.gGreen);
+    else if (ibCol==='red')  h+=sRow('red day continuation',cont.rRed);
+    else { h+=sRow('green ib → green day',cont.gGreen); h+=sRow('red ib → red day',cont.rRed); }
+  } else { h+=`<div class="load-msg">loading…</div>`; }
+  h+=`</div>`;
 
   return h;
 }
 
 // ── Direction & Context section ───────────────────────────
 function renderCtxSection(sess,d,edgefulBase) {
-  const os=pOpenStat(d.openingStats), pdr=pPrevDay(d.prevDayRange), gf=pGapFill(d.gapFill);
-  const anyLoading=!d.openingStats&&!d.prevDayRange&&!d.gapFill;
+  const DAY=DOW_MAP[dowName()];
+  const pdr=pPrevDay(daySlice(d.prevDayRange,DAY)), gf=pGapFill(daySlice(d.gapFill,DAY)), ib=pInsideBars(daySlice(d.insideBars,DAY));
+  const anyLoading=!d.prevDayRange&&!d.gapFill&&!d.insideBars;
   const dr=metaDateRange();
 
   let h=`<div class="subsection-header">
   <div style="display:flex;align-items:baseline;justify-content:space-between">
     <h3 class="text-sm font-medium lowercase" style="color:#FFFFFF">direction &amp; context</h3>
-    <span class="source-label">from: <a href="${edgefulBase}/opening-stats/standard" target="_blank" rel="noopener">opening stats</a>, <a href="${edgefulBase}/previous-days-range/standard" target="_blank" rel="noopener">previous days range</a>, <a href="${edgefulBase}/gap-fill/standard" target="_blank" rel="noopener">gap fill</a></span>
+    <span class="source-label">from: <a href="${edgefulBase}/previous-days-range/by-weekday" target="_blank" rel="noopener">previous days range</a>, <a href="${edgefulBase}/gap-fill/by-weekday" target="_blank" rel="noopener">gap fill</a>, <a href="${edgefulBase}/inside-bars/by-weekday" target="_blank" rel="noopener">inside bars</a></span>
   </div>
   <p class="meta-line" style="margin-top:3px">
-    <span>${sess.ticker} direction</span>
+    <span>${sess.ticker} direction · ${DAY||'all days'}</span>
     <span class="meta-sep">|</span>
     <span>${dr}</span>
     <span class="meta-sep">|</span>
@@ -577,14 +564,6 @@ function renderCtxSection(sess,d,edgefulBase) {
   if (anyLoading) {
     h+=`<div class="load-msg">loading…</div>`;
   } else {
-    if (d.openingStats&&d.openingStats._err) { h+=`<div class="err-msg">${d.openingStats._err}</div>`; }
-    else if (os) {
-      h+=sRow('opens above PDH',os.abovePDH,`n=${os.n}`);
-      h+=sRow('opens in range',os.inRange);
-      h+=sRow('opens below PDL',os.belowPDL);
-      h+=`<div class="mini-div"></div>`;
-    }
-
     if (d.prevDayRange&&d.prevDayRange._err) { h+=`<div class="err-msg">${d.prevDayRange._err}</div>`; }
     else if (pdr) {
       h+=sRow('PDH break rate',pdr.pdhPct,`n=${pdr.pdhN}`);
@@ -598,6 +577,16 @@ function renderCtxSection(sess,d,edgefulBase) {
     else if (gf) {
       h+=sRow('gap-up fill rate',gf.upFill,`${Math.round(gf.upFreq??0)}% of days`);
       h+=sRow('gap-down fill rate',gf.dnFill,`${Math.round(gf.dnFreq??0)}% of days`);
+    }
+
+    if (d.insideBars&&d.insideBars._err) { h+=`<div class="err-msg">${d.insideBars._err}</div>`; }
+    else if (ib) {
+      h+=`<div class="mini-div"></div>`;
+      h+=`<div style="font-size:11px;color:#555555;margin-bottom:6px">inside bar breakout — n=${ib.n}</div>`;
+      h+=sRow('break PDH',ib.pdhPct);
+      h+=sRow('break PDL',ib.pdlPct);
+      h+=sRow('break both',ib.bothPct);
+      h+=sRow('stayed inside',ib.insidePct);
     }
   }
 
