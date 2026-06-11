@@ -174,6 +174,46 @@ footer { margin-top: 40px; padding: 20px 14px; border-top: 1px solid #2A2A2A; ma
   #cards { grid-template-columns: 1fr 1fr; max-width: 1120px; gap: 16px; padding: 16px; }
   footer { max-width: 1120px; }
 }
+
+/* ── Desktop tab layout ──────────────────────────────────── */
+#tab-bar { display: none; }
+@media (min-width: 1024px) {
+  /* Page fills viewport, no body scroll */
+  body { height: 100vh; overflow: hidden; }
+  #setup { height: 100vh; overflow-y: auto; }
+  #dashboard { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+  #hdr, #mode-bar, #tab-bar { flex-shrink: 0; }
+  footer { display: none; }
+
+  /* Tab bar */
+  #tab-bar { display: flex; background: #09090B; border-bottom: 1px solid #2A2A2A; padding: 0 20px; gap: 2px; flex-shrink: 0; }
+  .tab-btn { padding: 10px 18px; background: none; border: none; border-bottom: 2px solid transparent; color: #555555; cursor: pointer; font-size: 13px; font-weight: 500; font-family: 'Poppins', sans-serif; white-space: nowrap; transition: color 0.12s; }
+  .tab-btn:hover { color: #C7C7C7; }
+  .tab-btn.active { color: #FFFFFF; border-bottom-color: #0075FF; }
+  .tab-badge { font-size: 10px; opacity: 0.7; margin-left: 5px; }
+
+  /* Cards area — fill remaining height */
+  #cards { flex: 1; min-height: 0; overflow: hidden; grid-template-columns: 1fr; max-width: none; padding: 0; gap: 0; margin: 0; }
+
+  /* Hide non-active cards */
+  .card-wrap.tab-hidden { display: none; }
+  .card-wrap { height: 100%; display: flex; }
+
+  /* Card = 2-panel split */
+  .card { flex: 1; display: grid; grid-template-columns: 380px 1fr; overflow: hidden; border-radius: 0; border: none; border-right: none; }
+  .card.has-conflict { border: none; border-left: 3px solid #D32D1F; }
+  .card-left { overflow-y: auto; border-right: 1px solid #2A2A2A; -webkit-overflow-scrolling: touch; }
+  .card-right { overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; align-content: start; -webkit-overflow-scrolling: touch; }
+  .dt-section { border-bottom: 1px solid #2A2A2A; }
+  .dt-section:nth-child(odd) { border-right: 1px solid #2A2A2A; }
+  /* IB breakout section spans both columns (it has a chart, needs more width) */
+  .dt-section-wide { grid-column: 1 / -1; border-right: none; border-bottom: 1px solid #2A2A2A; }
+
+  /* Tighter padding on right panel sections at desktop */
+  .card-right .sec-body { padding: 10px 14px; }
+  .card-right .subsection-header { padding: 8px 14px; }
+  .card-right .subsection-header, .card-right .wip-bar { padding-left: 14px; padding-right: 14px; }
+}
 </style>
 </head>
 <body>
@@ -205,6 +245,7 @@ footer { margin-top: 40px; padding: 20px 14px; border-top: 1px solid #2A2A2A; ma
     <span id="mode-et"></span>
     <button id="mode-ovr">override</button>
   </div>
+  <div id="tab-bar"></div>
   <div id="cards"></div>
   <footer>
     <p class="text-xs lowercase" style="color:#555555">data from <a href="https://edgeful.com" style="color:#C7C7C7;text-decoration:none">edgeful.com</a> · historical performance is not a prediction of future results</p>
@@ -235,6 +276,7 @@ const S = {
   wipIB: {},            // { [sessId]: live IB data from WIP feed }
   tradeManual: {},      // { [sessId]: { ibHigh: bool, ibLow: bool } } — WIP won't overwrite manual fields
   formedFirstManual: {},// { [sessId]: bool } — user explicitly clicked a formed-first button
+  activeTab: null,      // active session id for desktop tab view
 };
 const charts = {};
 
@@ -673,8 +715,34 @@ function renderModeBar() {
 setInterval(renderModeBar,60000);
 
 // ── Render all cards ──────────────────────────────────────
+function applyTabState() {
+  if (!S.activeTab) S.activeTab = SESSIONS[0].id;
+  document.querySelectorAll('.card-wrap').forEach(w => {
+    w.classList.toggle('tab-hidden', w.dataset.sessId !== S.activeTab);
+  });
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.tabId === S.activeTab);
+  });
+}
+
 function renderCards() {
   renderModeBar();
+  if (!S.activeTab) S.activeTab = SESSIONS[0].id;
+  // Render tab bar
+  const tabBar = document.getElementById('tab-bar');
+  if (tabBar) {
+    const dow = dowName();
+    tabBar.innerHTML = SESSIONS.map(s => {
+      const sched = s.days.includes(dow);
+      return `<button class="tab-btn${S.activeTab===s.id?' active':''}" data-tab-id="${s.id}">${s.name}${!sched?'<span class="tab-badge">○</span>':''}</button>`;
+    }).join('');
+    tabBar.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        S.activeTab = btn.dataset.tabId;
+        applyTabState();
+      });
+    });
+  }
   document.getElementById('cards').innerHTML=SESSIONS.map(renderCard).join('');
   // Bias buttons
   document.querySelectorAll('[data-bs]').forEach(btn=>btn.addEventListener('click',()=>{
@@ -713,6 +781,7 @@ function renderCards() {
       updateTradeUI(id);
     });
   });
+  applyTabState();
 }
 
 function renderCard(sess) {
@@ -742,8 +811,10 @@ function renderCard(sess) {
   </div>
 </div>` : '';
 
-  return `<div class="card${cfls.length?' has-conflict':''}">
+  return `<div class="card-wrap" data-sess-id="${sess.id}">
+<div class="card${cfls.length?' has-conflict':''}">
 
+<div class="card-left">
 <div class="card-hd">
   <div class="card-top">
     <span class="card-name">${sess.name}</span>
@@ -755,26 +826,25 @@ function renderCard(sess) {
     ${!sched?'<span class="badge-oos">not in schedule today</span>':''}
   </div>
 </div>
-
 <div id="wip-status-${sess.id}">${sess.ib?renderWIPStatus(sess):''}</div>
-
 <div class="bias-row">
   <button class="bias-btn${bias==='long'   ?' sel-long':''}"    data-bs="${sess.id}" data-bv="long">▲ long</button>
   <button class="bias-btn${bias==='neutral'?' sel-neutral':''}" data-bs="${sess.id}" data-bv="neutral">— neutral</button>
   <button class="bias-btn${bias==='short'  ?' sel-short':''}"   data-bs="${sess.id}" data-bv="short">▼ short</button>
 </div>
-
 ${tradePanel}
-
 <div id="math-wrap-${sess.id}">${sess.ib?renderMathContent(sess):''}</div>
-
 <div class="verdict-wrap" id="verdict-wrap-${sess.id}">${sess.ib?renderVerdictContent(sess):''}</div>
-
 <div class="odds-wrap" id="odds-wrap-${sess.id}">${sess.ib?renderOddsContent(sess):''}</div>
-
 ${cfls.length?`<div class="conflict-box"><strong>⚠ conflict</strong>${cfls.map(c=>`• ${c}`).join('<br>')}</div>`:''}
+</div>
+
+<div class="card-right">
 ${sess.ib?renderIBSection(sess,d,post,edgefulBase):''}
 ${renderCtxSection(sess,d,edgefulBase)}
+</div>
+
+</div>
 </div>`;
 }
 
@@ -785,7 +855,7 @@ function renderIBSection(sess,d,post,edgefulBase) {
   let h='';
 
   // IB Breakout
-  h+=`<div class="subsection-header"><div style="display:flex;align-items:baseline;justify-content:space-between"><h3 class="text-sm font-medium lowercase" style="color:#FFFFFF">ib breakout</h3><span class="source-label">from: <a href="${edgefulBase}/initial-balance-breakout/standard" target="_blank" rel="noopener">initial balance standard</a></span></div></div>
+  h+=`<div class="dt-section dt-section-wide"><div class="subsection-header"><div style="display:flex;align-items:baseline;justify-content:space-between"><h3 class="text-sm font-medium lowercase" style="color:#FFFFFF">ib breakout</h3><span class="source-label">from: <a href="${edgefulBase}/initial-balance-breakout/standard" target="_blank" rel="noopener">initial balance standard</a></span></div></div>
 <div class="sec-body">`;
   if (d.ibStd&&d.ibStd._err) { h+=`<div class="err-msg">${d.ibStd._err}</div>`; }
   else if (std) {
@@ -800,10 +870,10 @@ function renderIBSection(sess,d,post,edgefulBase) {
       h+=`<div class="dow-strip"><div class="dow-title">${dow} — n=${w.n}</div>${sRow('single break',w.sPct)}${sRow('double break',w.bPct)}${sRow('no break',w.nPct)}</div>`;
     }
   } else { h+=`<div class="load-msg">loading…</div>`; }
-  h+=`</div>`;
+  h+=`</div></div>`; // close sec-body + dt-section-wide
 
   // Direction Trigger (by rejection)
-  h+=`<div class="subsection-header"><div style="display:flex;align-items:baseline;justify-content:space-between"><h3 class="text-sm font-medium lowercase" style="color:#FFFFFF">direction trigger</h3><span class="source-label">from: <a href="${edgefulBase}/initial-balance-breakout/by-rejection" target="_blank" rel="noopener">initial balance by rejection</a></span></div></div>
+  h+=`<div class="dt-section"><div class="subsection-header"><div style="display:flex;align-items:baseline;justify-content:space-between"><h3 class="text-sm font-medium lowercase" style="color:#FFFFFF">direction trigger</h3><span class="source-label">from: <a href="${edgefulBase}/initial-balance-breakout/by-rejection" target="_blank" rel="noopener">initial balance by rejection</a></span></div></div>
 <div class="sec-body">`;
   if (d.ibRej&&d.ibRej._err) { h+=`<div class="err-msg">${d.ibRej._err}</div>`; }
   else if (rej) {
@@ -818,12 +888,12 @@ function renderIBSection(sess,d,post,edgefulBase) {
     h+=`<div class="indent">${sRow('→ ib high breaks',rej.lBreakHPct,null,true)}</div>`;
     h+=`<div class="indent">${sRow('→ ib low breaks',rej.lBreakLPct)}</div>`;
   } else { h+=`<div class="load-msg">loading…</div>`; }
-  h+=`</div>`;
+  h+=`</div></div>`; // close sec-body + dt-section
 
   // IB retracement levels
   const ret=pIBRetracement(d.ibRetracement);
   const wLive=S.wipIB[sess.id];
-  h+=`<div class="subsection-header"><div style="display:flex;align-items:baseline;justify-content:space-between"><h3 class="text-sm font-medium lowercase" style="color:#FFFFFF">ib retracement</h3><span class="source-label">from: <a href="${edgefulBase}/initial-balance-breakout/by-retracement" target="_blank" rel="noopener">initial balance by retracement</a></span></div></div>
+  h+=`<div class="dt-section"><div class="subsection-header"><div style="display:flex;align-items:baseline;justify-content:space-between"><h3 class="text-sm font-medium lowercase" style="color:#FFFFFF">ib retracement</h3><span class="source-label">from: <a href="${edgefulBase}/initial-balance-breakout/by-retracement" target="_blank" rel="noopener">initial balance by retracement</a></span></div></div>
 <div class="sec-body">`;
   if (d.ibRetracement&&d.ibRetracement._err) { h+=`<div class="err-msg">${d.ibRetracement._err}</div>`; }
   else if (ret) {
@@ -842,10 +912,10 @@ function renderIBSection(sess,d,post,edgefulBase) {
       h+=`<div class="indent">${sRow('→ 75% retracement hit', ret.breakdown.l3, null, false, palette.bearish)}</div>`;
     }
   } else { h+=`<div class="load-msg">loading…</div>`; }
-  h+=`</div>`;
+  h+=`</div></div>`; // close sec-body + dt-section
 
   // Breakout levels
-  h+=`<div class="subsection-header"><div style="display:flex;align-items:baseline;justify-content:space-between"><h3 class="text-sm font-medium lowercase" style="color:#FFFFFF">breakout levels</h3><span class="source-label">from: <a href="${edgefulBase}/initial-balance-breakout/by-levels" target="_blank" rel="noopener">initial balance by levels</a></span></div></div>
+  h+=`<div class="dt-section"><div class="subsection-header"><div style="display:flex;align-items:baseline;justify-content:space-between"><h3 class="text-sm font-medium lowercase" style="color:#FFFFFF">breakout levels</h3><span class="source-label">from: <a href="${edgefulBase}/initial-balance-breakout/by-levels" target="_blank" rel="noopener">initial balance by levels</a></span></div></div>
 <div class="sec-body">`;
   if (d.ibLevels&&d.ibLevels._err) { h+=`<div class="err-msg">${d.ibLevels._err}</div>`; }
   else if (lev) {
@@ -859,11 +929,11 @@ function renderIBSection(sess,d,post,edgefulBase) {
       ['-0.5','-1.0','-1.5','-2.0','-2.5'].forEach(k=>{ const v=lev.breakdown.lvl[k]; if(v&&v.percentage>0) h+=sRow(`${Math.abs(+k)}× IB`,v.percentage,null,false,palette.bearish); });
     }
   } else { h+=`<div class="load-msg">loading…</div>`; }
-  h+=`</div>`;
+  h+=`</div></div>`; // close sec-body + dt-section
 
   // Candle continuation
   const ibCol=S.ibColor[sess.id]||null;
-  h+=`<div class="subsection-header"><div style="display:flex;align-items:baseline;justify-content:space-between"><h3 class="text-sm font-medium lowercase" style="color:#FFFFFF">candle continuation</h3><span class="source-label">from: <a href="${edgefulBase}/opening-candle-continuation/by-weekday" target="_blank" rel="noopener">opening candle continuation by weekday</a></span></div></div>
+  h+=`<div class="dt-section"><div class="subsection-header"><div style="display:flex;align-items:baseline;justify-content:space-between"><h3 class="text-sm font-medium lowercase" style="color:#FFFFFF">candle continuation</h3><span class="source-label">from: <a href="${edgefulBase}/opening-candle-continuation/by-weekday" target="_blank" rel="noopener">opening candle continuation by weekday</a></span></div></div>
 <div class="sec-body"><div class="ib-pick-row"><span class="ib-pick-lbl">ib closed:</span>
   <button class="ib-pick-btn${ibCol==='green'?' ib-green':''}" data-cs="${sess.id}" data-cv="green">● green</button>
   <button class="ib-pick-btn${ibCol==='red'  ?' ib-red':''}"   data-cs="${sess.id}" data-cv="red">● red</button>
@@ -874,7 +944,7 @@ function renderIBSection(sess,d,post,edgefulBase) {
     else if (ibCol==='red') h+=sRow('red day continuation',cont.rRed);
     else { h+=sRow('green ib → green day',cont.gGreen); h+=sRow('red ib → red day',cont.rRed); }
   } else { h+=`<div class="load-msg">loading…</div>`; }
-  h+=`</div>`;
+  h+=`</div></div>`; // close sec-body + dt-section
 
   return h;
 }
@@ -885,7 +955,7 @@ function renderCtxSection(sess,d,edgefulBase) {
   const pdr=pPrevDay(daySlice(d.prevDayRange,DAY)), gf=pGapFill(daySlice(d.gapFill,DAY)), ib=pInsideBars(daySlice(d.insideBars,DAY));
   const anyLoading=!d.prevDayRange&&!d.gapFill&&!d.insideBars;
   const dr=metaDateRange();
-  let h=`<div class="subsection-header"><div style="display:flex;align-items:baseline;justify-content:space-between"><h3 class="text-sm font-medium lowercase" style="color:#FFFFFF">direction &amp; context</h3><span class="source-label">from: <a href="${edgefulBase}/previous-days-range/by-weekday" target="_blank" rel="noopener">prev days range</a>, <a href="${edgefulBase}/gap-fill/by-weekday" target="_blank" rel="noopener">gap fill</a>, <a href="${edgefulBase}/inside-bars/by-weekday" target="_blank" rel="noopener">inside bars</a></span></div>
+  let h=`<div class="dt-section"><div class="subsection-header"><div style="display:flex;align-items:baseline;justify-content:space-between"><h3 class="text-sm font-medium lowercase" style="color:#FFFFFF">direction &amp; context</h3><span class="source-label">from: <a href="${edgefulBase}/previous-days-range/by-weekday" target="_blank" rel="noopener">prev days range</a>, <a href="${edgefulBase}/gap-fill/by-weekday" target="_blank" rel="noopener">gap fill</a>, <a href="${edgefulBase}/inside-bars/by-weekday" target="_blank" rel="noopener">inside bars</a></span></div>
   <p class="meta-line" style="margin-top:3px"><span>${sess.ticker} · ${DAY||'all days'}</span><span class="meta-sep">|</span><span>${dr}</span><span class="meta-sep">|</span><a class="meta-link" href="https://edgeful.com" target="_blank" rel="noopener">edgeful.com</a></p>
 </div><div class="sec-body">`;
   if (anyLoading) { h+=`<div class="load-msg">loading…</div>`; }
@@ -913,7 +983,7 @@ function renderCtxSection(sess,d,edgefulBase) {
       h+=sRow('stayed inside',ib.insidePct);
     }
   }
-  h+=`</div>`;
+  h+=`</div></div>`; // close sec-body + dt-section
   return h;
 }
 
